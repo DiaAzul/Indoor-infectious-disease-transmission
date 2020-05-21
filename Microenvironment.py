@@ -35,16 +35,17 @@ class Microenvironment:
         self.quanta_concentration = 0.0
         # Assume there are no infected people in the building at start
         self.infected = 0.0
+        self.quanta_emission_rate = 0.0
 
         # Store results in a list
         self.quanta_concentration_results = []
+        self.quanta_concentration_results.append(self.quanta_concentration)
 
     def simulate(self):
         """ Calculate the new quanta concentration in the building """
         while True:
             yield self.env.timeout(1)
-            self.infected = 1.0 if self.env.now <= 10 else 0.0
-            self.quanta_concentration = self.calc_quanta_concentration(1, self.infected, 142, self.quanta_concentration, self.time_interval)
+            self.quanta_concentration = self.calc_quanta_concentration(1, self.infected, self.quanta_emission_rate, self.quanta_concentration, self.time_interval)
             self.quanta_concentration_results.append(self.quanta_concentration)
 
     def get_results(self):
@@ -84,3 +85,15 @@ class Microenvironment:
         
         return quanta_concentration   
 
+    def infected_person(self, quanta_emission_rate, duration):
+        """ Introduce an infected person to the microenvironment
+
+        Keyword arguments:
+        quanta_emission_rate    Rate at which an infected person emits infectious droplets
+        duration                Length of time that infected person remains in the microenvironment
+        """
+
+        self.infected = 1.0
+        self.quanta_emission_rate = quanta_emission_rate
+        yield self.env.timeout(duration+1)
+        self.infected = 0.0
