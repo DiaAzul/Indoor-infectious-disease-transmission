@@ -54,3 +54,14 @@ class Check:
             raise ValueError('value must be a number')
         if not (x <= 0):
             raise ValueError('value must be less than, or equal to, zero')
+
+class CheckList:
+    """ Class containing functions to check whether lists have certain characteristics """
+
+    @staticmethod
+    def fail_if_empty(li):
+        """ Check whether a list is empty """
+
+        if not li:
+            raise ValueError('list must have at least one entry')
+

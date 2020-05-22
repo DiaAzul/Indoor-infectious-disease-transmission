@@ -2,16 +2,18 @@
 
 import simpy
 import math
-from Tools.Check import Check 
+from Tools.Check import Check
+from DataCollection import DataCollection
 
 class Microenvironment:
     """ Class to implement a microenvironment as a simpy discreate event simulation """
 
-    def __init__(self, env, time_interval, volume, air_exchange_rate):
+    def __init__(self, env, dc, time_interval, volume, air_exchange_rate):
         """ Initialise the microenvironment 
 
         Keyword arguments:
         env                     A simpy environment
+        dc                      Data collection object
         time_interval           Scaling factor for time interval to enable sub-unit calculations (default=1.0, minutes would be 1/60th of an hour)
         volume                  Volume of the indoor environment
         air_exchange_rate       Rate at which air is exchanged
@@ -27,6 +29,7 @@ class Microenvironment:
         Check.is_greater_than_zero(air_exchange_rate)
 
         self.env = env
+        self.dc = dc
         self.time_interval = time_interval
         self.volume = volume
         self.air_exchange_rate = air_exchange_rate
@@ -35,17 +38,31 @@ class Microenvironment:
         self.quanta_concentration = 0.0
         # Assume there are no infected people in the building at start
         self.infected = 0.0
-        self.quanta_emission_rate = 0.0
+        self.total_quanta_emission_rate = 0.0
 
         # Store results in a list
         self.quanta_concentration_results = []
         self.quanta_concentration_results.append(self.quanta_concentration)
 
-    def simulate(self):
+        # Limit number of people in the microenvironment
+        # Visitors that can't get in immediately join a queue
+        self.visitor_limit = None
+        self.visitors = 0
+
+    def run(self):
         """ Calculate the new quanta concentration in the building """
         while True:
             yield self.env.timeout(1)
-            self.quanta_concentration = self.calc_quanta_concentration(1, self.infected, self.quanta_emission_rate, self.quanta_concentration, self.time_interval)
+
+            if self.total_quanta_emission_rate and self.infected:
+                quanta_emission_rate = self.total_quanta_emission_rate / self.infected
+            else:
+                quanta_emission_rate = 1
+            
+            self.quanta_concentration = self.calc_quanta_concentration(1, self.infected, 
+                                                quanta_emission_rate,
+                                                self.quanta_concentration,
+                                                self.time_interval)
             self.quanta_concentration_results.append(self.quanta_concentration)
 
     def get_results(self):
@@ -85,15 +102,43 @@ class Microenvironment:
         
         return quanta_concentration   
 
-    def infected_person(self, quanta_emission_rate, duration):
+    def add_visitor(self, duration, infected=0, quanta_emission_rate=1):
         """ Introduce an infected person to the microenvironment
 
         Keyword arguments:
         quanta_emission_rate    Rate at which an infected person emits infectious droplets
         duration                Length of time that infected person remains in the microenvironment
         """
-
-        self.infected = 1.0
-        self.quanta_emission_rate = quanta_emission_rate
+        self.visitors += 1
+        self.infected += infected
+        self.total_quanta_emission_rate += quanta_emission_rate
         yield self.env.timeout(duration+1)
-        self.infected = 0.0
+        self.total_quanta_emission_rate -= quanta_emission_rate
+        self.infected -= 0
+        self.visitors -= 1
+
+    def set_visitor_limit(self, limit):
+        """ Set the maximum number of visitors in the microenvironment at anyone time """
+        self.visitor_limit = limit
+
+    def clear_visitor_limit(self):
+        """ Clears the limit for the maximum concurrent number of visitors in the microenvironment """
+        self.visitor_limit = None
+
+
+    def entry_callback(self):
+        """ Method to call when a person needs entry to the microenvironment
+        
+        Return value:
+        Method to call when a person needs to be added to the environment
+        """
+        return self.add_visitor
+
+    def initialise_periodic_reporting(self):
+        """ Initialise periodic reporting """
+        column_names=['Quanta concentration']
+        self.dc.periodic_reporting("Quanta concentration", column_names, self.periodic_reporting_callback, 1)
+
+    def periodic_reporting_callback(self):
+        """ Callback to collect data for periodic reporting """
+        return self.quanta_concentration
