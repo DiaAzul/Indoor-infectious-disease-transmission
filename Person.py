@@ -29,11 +29,14 @@ class Person:
         self.env = env
         self.dc = dc
 
+        self.left_microenvironment = self.env.event()
+
         # keep a record of person IDs
         self.PID = next(Person.get_new_id)
 
         # Routing is the list of environments that the person traverses
         self.routing = []
+
 
 
     def get_PID(self):
@@ -78,6 +81,14 @@ class Person:
         initates a new simpy process for the persons activity within the microenvironment
         """
         # For each microenvironment that the person visits
-        while CheckList.fail_if_empty(self.routing):
+        while self.routing:
             microenvironment, kwargs = self.routing.pop()
-            self.env.process(microenvironment.entry_callback(self, **kwargs))
+            callback = microenvironment.entry_callback()
+            self.env.process(callback(self, **kwargs))
+            yield self.left_microenvironment
+
+        """********************************************************************************
+        We need to have a yield somewhere in this function.
+
+        once we have set the process running we need to yield until it completes.
+        *********************************************************************************"""

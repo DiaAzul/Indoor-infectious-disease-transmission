@@ -109,7 +109,7 @@ class Microenvironment:
         
         return quanta_concentration   
 
-    def request_entry(self, patient, duration, infected=0, quanta_emission_rate=0):
+    def request_entry(self, person, duration, infected=0, quanta_emission_rate=0):
         """ Introduce an infected person to the microenvironment
 
         Keyword arguments:
@@ -119,6 +119,7 @@ class Microenvironment:
 
         # Request entry into the microenvironment
         request_entry = self.microenvironment.request()
+        print(self.env.now,", person:", person.PID, "QC:", self.quanta_concentration)       
         yield request_entry
 
         # Granted an entry
@@ -126,11 +127,12 @@ class Microenvironment:
         self.infected += infected
         self.total_quanta_emission_rate += quanta_emission_rate
         # Wait in the shop
-        print("patient:", patient.PID)
+
         yield self.env.timeout(duration+1)
         self.total_quanta_emission_rate -= quanta_emission_rate
         self.infected -= infected
         self.visitors -= 1
+        person.left_microenvironment.succeed()
 
 
     def entry_callback(self):

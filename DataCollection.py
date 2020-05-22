@@ -5,8 +5,6 @@ import simpy
 
 # Import local libraries
 from Tools.Check import Check
-from Microenvironment import Microenvironment
-from Person import Person
 
 class DataCollection:
     """ Class to collect data from across the simulation
