@@ -34,17 +34,44 @@ class Simulation:
         # Numper of periods the simulation will run
         self.periods = 180 
 
-        microenvironments = []
-        population = []
-
+        self.microenvironments = {}
+        self.population = {}
 
     def create_microenvironments(self):
         """ Create the microenvironments used within the simulation """
-        pass
+        volume = 75 # m^3
+        air_exchange_rate = 2.2  # h^-1: natural ventilation (0.2) mechanical ventilation (2.2)  
+        environment_name = 'Pharmacy'
 
-    def create_routing(self, person):
+        self.microenvironments[environment_name] = Microenvironment(self.env, self.dc, self.time_interval, volume, air_exchange_rate)
+
+
+    def create_routing(self, person, parameters=None):
         """ Create the routing for a person """
-        pass
+
+        person.enqueue(self.microenvironments['Pharmacy'], parameters)
+
+
+    def create_people(self, arrival_rate_per_hour):
+        """ Create a method of generating people """
+
+        quanta_emission_rate = 147
+        is_someone_infected = False
+
+        while True:        
+            infected = 0 if is_someone_infected else 1
+            is_someone_infected = True
+
+            person = Person(self.env, quanta_emission_rate)
+            self.create_routing(person, infected)
+
+            time_to_next_person = 10
+            self.env.timeout(time_to_next_person) 
+
+        """ **************************************************************************
+        Need to work out how to create people, add them to the list, start them running, return for next person
+        ****************************************************************************** """
+
 
     def run(self, periods):
         """ Run the simulation 
@@ -52,15 +79,31 @@ class Simulation:
         Keyword arguments:
         periods             Number of periods to run the simulation
         """
-        pass
+
+
+        self.create_microenvironments()
+
+        # Start the microenvironments
+        for microenvironment in self.microenvironments:
+            self.env.process(microenvironment.run())
+
+        
+
+
+
+
+
+
+
+
+        
 
 
     def dummy(self):
              
 
         # Set base statistics
-        self.me_volume = 75 # m^3
-        self.me_air_exchange_rate = 2.2  # h^-1: natural ventilation (0.2) mechanical ventilation (2.2)
+
         self.me_quanta_emission_rate = 142 # quanta h^-1: Resting(98.1), Standing (147), Light Exercise (317)
         self.me_n0 = 0.0
 
