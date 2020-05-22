@@ -8,7 +8,7 @@ from DataCollection import DataCollection
 class Microenvironment:
     """ Class to implement a microenvironment as a simpy discreate event simulation """
 
-    def __init__(self, env, dc, time_interval, volume, air_exchange_rate):
+    def __init__(self, env, dc, time_interval, volume, air_exchange_rate, capacity=None):
         """ Initialise the microenvironment 
 
         Keyword arguments:
@@ -33,6 +33,13 @@ class Microenvironment:
         self.time_interval = time_interval
         self.volume = volume
         self.air_exchange_rate = air_exchange_rate
+
+        if capacity is None:
+            self.capacity = simpy.core.Infinity
+        else:
+            self.capacity = capacity
+
+        self.microenvironment = simpy.Resource(self.env, self.capacity)
 
         # Initialise the building environment
         self.quanta_concentration = 0.0
@@ -102,37 +109,37 @@ class Microenvironment:
         
         return quanta_concentration   
 
-    def add_visitor(self, duration, infected=0, quanta_emission_rate=1):
+    def request_entry(self, patient, duration, infected=0, quanta_emission_rate=0):
         """ Introduce an infected person to the microenvironment
 
         Keyword arguments:
         quanta_emission_rate    Rate at which an infected person emits infectious droplets
         duration                Length of time that infected person remains in the microenvironment
         """
+
+        # Request entry into the microenvironment
+        request_entry = self.microenvironment.request()
+        yield request_entry
+
+        # Granted an entry
         self.visitors += 1
         self.infected += infected
         self.total_quanta_emission_rate += quanta_emission_rate
+        # Wait in the shop
+        print("patient:", patient.PID)
         yield self.env.timeout(duration+1)
         self.total_quanta_emission_rate -= quanta_emission_rate
-        self.infected -= 0
+        self.infected -= infected
         self.visitors -= 1
-
-    def set_visitor_limit(self, limit):
-        """ Set the maximum number of visitors in the microenvironment at anyone time """
-        self.visitor_limit = limit
-
-    def clear_visitor_limit(self):
-        """ Clears the limit for the maximum concurrent number of visitors in the microenvironment """
-        self.visitor_limit = None
 
 
     def entry_callback(self):
         """ Method to call when a person needs entry to the microenvironment
         
         Return value:
-        Method to call when a person needs to be added to the environment
+        Method to call
         """
-        return self.add_visitor
+        return self.request_entry
 
     def initialise_periodic_reporting(self):
         """ Initialise periodic reporting """

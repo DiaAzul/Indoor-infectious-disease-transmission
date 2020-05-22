@@ -46,10 +46,10 @@ class Simulation:
         self.microenvironments[environment_name] = Microenvironment(self.env, self.dc, self.time_interval, volume, air_exchange_rate)
 
 
-    def create_routing(self, person, parameters=None):
+    def create_routing(self, person, **kwargs):
         """ Create the routing for a person """
 
-        person.enqueue(self.microenvironments['Pharmacy'], parameters)
+        person.enqueue(self.microenvironments['Pharmacy'], duration=kwargs['duration'], quanta_emission_rate=kwargs['quanta_emission_rate'])
 
 
     def create_people(self, arrival_rate_per_hour):
@@ -62,8 +62,9 @@ class Simulation:
             infected = 0 if is_someone_infected else 1
             is_someone_infected = True
 
-            person = Person(self.env, quanta_emission_rate)
-            self.create_routing(person, infected)
+            person = Person(self.env, self.dc, quanta_emission_rate)
+            self.create_routing(person, infected=infected, quanta_emission_rate=147)
+            self.env.process(person.run())
 
             time_to_next_person = 10
             self.env.timeout(time_to_next_person) 
@@ -80,6 +81,7 @@ class Simulation:
         periods             Number of periods to run the simulation
         """
 
+        arrival_rate_per_hour = 10
 
         self.create_microenvironments()
 
@@ -87,7 +89,13 @@ class Simulation:
         for microenvironment in self.microenvironments:
             self.env.process(microenvironment.run())
 
-        
+        self.env.process(self.create_people(arrival_rate_per_hour))
+
+        # Start the data collection process
+        # self.env.process(self.dc.run())
+
+        self.env.run(until=self.periods)
+
 
 
 

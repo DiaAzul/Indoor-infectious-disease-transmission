@@ -4,6 +4,8 @@ import simpy
 import math
 import itertools
 from Tools.Check import Check, CheckList
+from Microenvironment import Microenvironment
+from DataCollection import DataCollection
 
 class Person:
     """ Class to implement a person as a simpy discreate event simulation
@@ -17,20 +19,18 @@ class Person:
     # create a unique ID counter
     get_new_id = itertools.count()
 
-    def __init__(self, env, quanta_emission_rate):
+    def __init__(self, env, dc, quanta_emission_rate):
         """ Establish the persons characteristics, this will be specific to each model
 
         Keyword arguments:
         env                     A simpy environment
         quanta_emission_rate    The rate at which the person emits quanta (convention per hour)                     
         """
+        self.env = env
+        self.dc = dc
 
         # keep a record of person IDs
         self.PID = next(Person.get_new_id)
-
-        # Set person characteristics
-        self.quanta_emission_rate = quanta_emission_rate
-        self.infected = 0
 
         # Routing is the list of environments that the person traverses
         self.routing = []
@@ -41,14 +41,14 @@ class Person:
         return self.PID
 
 
-    def enqueue(self, microenvironment, parameters=None):
+    def enqueue(self, microenvironment, **kwargs):
         """ Enqueue a microenvironment to the routing list 
 
         Keyword arguments:
         microenvironment        The microenvironment to which the person is routed
         parameters              Parameters passed to the microenvironment when called (optional)   
         """
-        self.routing.insert(0, (microenvironment, parameters) )  
+        self.routing.insert(0, (microenvironment, kwargs) )  
 
 
     def dequeue(self):
@@ -67,5 +67,17 @@ class Person:
         self.routing = []
 
 
+    def run(self):
+        """" Simulation process for the person
+        
+        Tests that the routing list still has destinations to visit
 
- 
+        pops the microenvironment to visit and uses entry_callback function to return the entry point
+        passes a reference to person instance (self)
+        pops the arguments passed as keyword list and passes as new argument list to entry point parameters
+        initates a new simpy process for the persons activity within the microenvironment
+        """
+        # For each microenvironment that the person visits
+        while CheckList.fail_if_empty(self.routing):
+            microenvironment, kwargs = self.routing.pop()
+            self.env.process(microenvironment.entry_callback(self, **kwargs))

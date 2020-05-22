@@ -35,6 +35,7 @@ class DataCollection:
         """ Add a new period_reporting collector
 
         NOTE: This has not yet been tested and may suffer from mutable object problems if called multiple times.
+        NOTE: This needs to be called within an env.process
         """
 
         self.data[data_set_name] = pd.DataFrame(columns=column_names)
@@ -45,7 +46,9 @@ class DataCollection:
 
 
 
-
+    def run(self):
+        """ Run the data collection process """
+        pass
 
 
 
