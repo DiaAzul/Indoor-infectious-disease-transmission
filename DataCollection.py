@@ -2,9 +2,11 @@
 
 import pandas as pd # modin
 import simpy
+from io import BytesIO, StringIO
+from csv import DictWriter, reader
 
 # Import local libraries
-from Tools.Check import Check
+from Tools.Check import Check, CheckList
 
 class DataCollection:
     """ Class to collect data from across the simulation
@@ -47,36 +49,84 @@ class DataCollection:
         
         Keyworkd parameters:
         env                 simpy environment
+        simulation_name     The name for this simulation
+        simulation_run      The sequence number for this run of the simulation
 
         """
-
         self.env = env
         self.simulation_name = simulation_name
         self.simulation_run = simulation_run
 
-        # All the data goes into a dictionary
-        # Table name is the key, value is a pandas dataframe
-        self.data = {}
+        # All the memory tables referenced from dictionary
+        self.memory_file = {}
+        self.memory_writer = {}
 
 
-    def periodic_reporting(self, data_set_name, column_names, callback, periods):
-        """ Add a new period_reporting collector
+    def create_period_reporting(self, data_set_name, callback, periods, column_dictionary):
+        """ Register a periodic report
 
-        NOTE: This has not yet been tested and may suffer from mutable object problems if called multiple times.
-        NOTE: This needs to be called within an env.process
+        Keyword parameters:
+        data_set_name           The name for the data set to be recorded
+        column_dictionary            Dictionary of column_names
+        callback                Function to call periodically to collect data
+        periods                 The number of periods between data collections 
+
+        Note data collection is triggered when the model first starts
         """
+        CheckList.is_a_dictionary(column_dictionary)
+        CheckList.fail_if_this_key_in_the_dictionary(data_set_name, self.memory_file)
 
-        self.data[data_set_name] = pd.DataFrame(columns=column_names)
+        header_list = []
+        for key, _ in column_dictionary.items():
+            header_list.append(key)
 
+        header_list.insert(0, 'time')
+        header_list.insert(0, 'simulation_run')
+        header_list.insert(0, 'simulation_name')
+
+        # Create a new memory file into which data will be stored as CSV file
+        self.memory_file[data_set_name] = StringIO()
+        self.memory_writer[data_set_name] = DictWriter(self.memory_file[data_set_name], header_list, restval='Null', extrasaction='raise')
+
+        self.memory_writer[data_set_name].writeheader()
+
+        self.env.process(self.periodic_reporting(data_set_name, callback, periods))
+        # stream_writer.writerow()
+
+
+    def periodic_reporting(self, data_set_name, callback, periods):
+        """ Add a new period_reporting collector 
+
+        Keyword parameters:
+        data_set_name           The name of the dataset into which data stored
+        callback                The method to call to fetch the data
+        periods                 The number of periods between fetches of data
+
+        """
         while True:
-            self.data[data_set_name].append(callback())
+            data = callback()
+            data['time'] = self.env.now
+            data['simulation_run'] = self.simulation_run
+            data['simulation_name'] = self.simulation_name
+            self.memory_writer[data_set_name].writerow(data)
+
             yield self.env.timeout(periods)
 
+    def get_results(self, data_set_name):
+        """ Return stored data as a pandas data frame """
+        self.memory_file[data_set_name].seek(0)
+        df = pd.read_csv(self.memory_file[data_set_name])
+
+        return df
+
+
+    def log_reporting(self, data_set_name, data):
+        pass
 
 
     def run(self):
         """ Run the data collection process """
-        pass
+        yield self.env.timeout(1)
 
 
 

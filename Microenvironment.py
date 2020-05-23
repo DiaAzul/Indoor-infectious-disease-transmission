@@ -47,14 +47,14 @@ class Microenvironment:
         self.infected = 0.0
         self.total_quanta_emission_rate = 0.0
 
-        # Store results in a list
-        self.quanta_concentration_results = []
-        self.quanta_concentration_results.append(self.quanta_concentration)
-
         # Limit number of people in the microenvironment
         # Visitors that can't get in immediately join a queue
         self.visitor_limit = None
         self.visitors = 0
+
+        # Set up periodic reporting
+        self.initialise_periodic_reporting()
+
 
     def run(self):
         """ Calculate the new quanta concentration in the building """
@@ -70,11 +70,7 @@ class Microenvironment:
                                                 quanta_emission_rate,
                                                 self.quanta_concentration,
                                                 self.time_interval)
-            self.quanta_concentration_results.append(self.quanta_concentration)
 
-    def get_results(self):
-        """ Returns the results from the simulation run """
-        return self.quanta_concentration_results
 
     # Calculate the quanta concentration at time t
     def calc_quanta_concentration(self, t, infected, quanta_emission_rate, initial_concentration=0.0, time_interval=1.0):
@@ -125,7 +121,6 @@ class Microenvironment:
         quanta_emission_rate    Rate at which an infected person emits infectious droplets
         duration                Length of time that infected person remains in the microenvironment
         """
-        print(person.PID)
         # Request entry into the microenvironment
         with self.microenvironment.request() as request_entry:
             yield request_entry
@@ -165,9 +160,15 @@ class Microenvironment:
 
     def initialise_periodic_reporting(self):
         """ Initialise periodic reporting """
-        column_names=['Quanta concentration']
-        self.dc.periodic_reporting("Quanta concentration", column_names, self.periodic_reporting_callback, 1)
+        # TODO: If we can get column dictionary from callback then move code to initialise in DC
+
+        data_set_name = 'Quanta concentration'
+        callback = self.periodic_reporting_callback
+        periods = 1
+        column_dictionary = self.periodic_reporting_callback()
+
+        self.dc.create_period_reporting(data_set_name, callback, periods, column_dictionary)
 
     def periodic_reporting_callback(self):
         """ Callback to collect data for periodic reporting """
-        return self.quanta_concentration
+        return {'quanta_concentration': self.quanta_concentration}

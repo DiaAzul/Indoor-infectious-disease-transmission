@@ -59,9 +59,25 @@ class CheckList:
     """ Class containing functions to check whether lists have certain characteristics """
 
     @staticmethod
+    def is_a_list(li):
+        """ Check whether variable is a list """
+        if not isinstance(li, list):
+            raise ValueError('This must be a list')
+    
+    @staticmethod
     def fail_if_empty(li):
         """ Check whether a list is empty """
 
         if not li:
             raise ValueError('list must have at least one entry')
 
+    @staticmethod
+    def is_a_dictionary(li):
+        """ Check whether variable is a list """
+        if not isinstance(li, dict):
+            raise ValueError('This must be a dictionary')
+
+    @staticmethod
+    def fail_if_this_key_in_the_dictionary(test_key, li):
+        if test_key in li:
+            raise ValueError('Cannot have duplicate keys in dictionary')

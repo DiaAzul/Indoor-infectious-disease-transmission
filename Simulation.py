@@ -2,6 +2,7 @@
 
 import simpy
 import math
+from time import process_time
 
 # Import local libraries
 from Tools.Check import Check
@@ -14,20 +15,24 @@ class Simulation:
     
     The simulation class is the main controlling class for the simulation and 
     is responsible for:
-        + Creating the simpy environment
-        + Creating individual microenvironments
-        + Generating people
-        + Defining the routing for each person
-        + Starting and stopping the model
-
+        * Creating the simpy environment
+        * Creating the data collection environment
+        * Creating individual microenvironments
+        * Generating people
+        * Defining the routing for each person
+        * Starting and stopping the model
      """
 
-    def __init__(self):
-        """ Initialise the simulation """
+    def __init__(self, simulation_name=None, simulation_run=None):
+        """ Initialise the simulation
 
+        Keyworkd parameters:
+        simulation_name     The name for this simulation
+        simulation_run      The sequence number for this run of the simulation 
+        """
         # Create a simpy environment
         self.env = simpy.Environment()
-        self.dc = DataCollection(self.env)
+        self.dc = DataCollection(self.env, simulation_name, simulation_run)
 
         # Set the time interval relative to one hour (minutes = 1/60)
         self.time_interval = 1/60
@@ -36,6 +41,18 @@ class Simulation:
 
         self.microenvironments = {}
         self.population = {}
+
+
+    def get_list_of_results(self):
+        """ Get the list of result tables """
+        #TODO: Get list of result tables from DataCollection
+        pass
+
+
+    def get_results(self, data_set_name):
+        """ Return stored data as a pandas data frame """
+        return self.dc.get_results(data_set_name)
+
 
     def create_microenvironments(self):
         """ Create the microenvironments used within the simulation """
@@ -49,8 +66,6 @@ class Simulation:
 
     def create_routing(self, person, **kwargs):
         """ Create the routing for a person """
-
-
         person.enqueue(self.microenvironments['Pharmacy'], 
                             duration=kwargs['duration'], 
                             infected=kwargs['infected'], 
@@ -59,45 +74,51 @@ class Simulation:
 
     def create_people(self, arrivals_per_hour):
         """ Create a method of generating people """
-
         quanta_emission_rate = 147
+        duration=10
         is_someone_infected = False
 
         while True:        
             infected = 0 if is_someone_infected else 1
             is_someone_infected = True
 
-            person = Person(self.env, self.dc, quanta_emission_rate)
-            self.create_routing(person, duration=10, infected=infected, quanta_emission_rate=147)
+            person = Person(self.env, self.dc, person_type='visitor')
+            self.create_routing(person, duration=duration, infected=infected, quanta_emission_rate=quanta_emission_rate)
             self.env.process(person.run())
 
             time_to_next_person = 60 / arrivals_per_hour
             yield self.env.timeout(time_to_next_person) 
 
-        """ **************************************************************************
-        Need to work out how to create people, add them to the list, start them running, return for next person
-        ****************************************************************************** """
 
-
-    def run(self, periods):
+    def run(self, periods, report_time=None):
         """ Run the simulation 
 
         Keyword arguments:
         periods             Number of periods to run the simulation
+        report_time         When True the simulation prints the time taken to execute the simulation to console.
         """
-
         arrivals_per_hour = 100
 
-        self.create_microenvironments()
-
+        # Start the data collection process
+        self.env.process(self.dc.run())
+        
         # Start the microenvironments
+        self.create_microenvironments()
         for key in self.microenvironments:
             self.env.process(self.microenvironments[key].run())
 
+        # Start people generation process
         self.env.process(self.create_people(arrivals_per_hour))
 
-        # Start the data collection process
-        # self.env.process(self.dc.run())
-
-        print("Periods:", periods)
+        # Run the model
+        t_start = process_time()        
+        if report_time:         
+            print("Running the model for {periods} periods".format(periods=periods))
+        
         self.env.run(until=periods)
+
+        if report_time:
+            t_end = process_time()
+            t_duration = t_end - t_start
+            print("Simulation finished. Execution time:{duration:.3f} seconds".format(duration=t_duration))
+    

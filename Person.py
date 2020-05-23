@@ -19,7 +19,7 @@ class Person:
     # create a unique ID counter
     get_new_id = itertools.count()
 
-    def __init__(self, env, dc, person_type, quanta_emission_rate):
+    def __init__(self, env, dc, person_type=None):
         """ Establish the persons characteristics, this will be specific to each model
 
         Keyword arguments:
