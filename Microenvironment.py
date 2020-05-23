@@ -109,39 +109,59 @@ class Microenvironment:
         
         return quanta_concentration   
 
-    def request_entry(self, person, duration, infected=0, quanta_emission_rate=0):
-        """ Introduce an infected person to the microenvironment
+    def process_staff(self, person, duration, infected=0, quanta_emission_rate=0):
+        """ Introduce staff person to the microenvironment
+
+        Keyword arguments:
+        quanta_emission_rate    Rate at which an infected person emits infectious droplets
+        duration  
+        """
+        yield self.env.timeout(duration)
+
+    def process_visitor(self, person, duration, infected=0, quanta_emission_rate=0):
+        """ Introduce a person to the microenvironment
 
         Keyword arguments:
         quanta_emission_rate    Rate at which an infected person emits infectious droplets
         duration                Length of time that infected person remains in the microenvironment
         """
-
+        print(person.PID)
         # Request entry into the microenvironment
-        request_entry = self.microenvironment.request()
-        print(self.env.now,", person:", person.PID, "QC:", self.quanta_concentration)       
-        yield request_entry
+        with self.microenvironment.request() as request_entry:
+            yield request_entry
 
-        # Granted an entry
-        self.visitors += 1
-        self.infected += infected
-        self.total_quanta_emission_rate += quanta_emission_rate
-        # Wait in the shop
+            # Granted an entry
+            self.visitors += 1
+            self.infected += infected
+            self.total_quanta_emission_rate += quanta_emission_rate if infected else 0
+ 
+           # Wait in the shop
+            yield self.env.timeout(duration)
 
-        yield self.env.timeout(duration+1)
-        self.total_quanta_emission_rate -= quanta_emission_rate
-        self.infected -= infected
-        self.visitors -= 1
-        person.left_microenvironment.succeed()
+            self.total_quanta_emission_rate -= quanta_emission_rate if infected else 0
+            self.infected -= infected
+            self.visitors -= 1
+
+            person.left_microenvironment.succeed()
 
 
-    def entry_callback(self):
+    def entry_callback(self, visit_type=None):
         """ Method to call when a person needs entry to the microenvironment
-        
+
+        Keyword arguments:
+        visit_type             Request for entry point for type of person or visit
+
         Return value:
-        Method to call
+        Method to call for that particular visit or person type
         """
-        return self.request_entry
+        callbacks = {
+            'staff':self.process_staff,
+            'visitor':self.process_visitor
+        }
+
+        callback = callbacks.get(visit_type, self.process_visitor)
+
+        return callback
 
     def initialise_periodic_reporting(self):
         """ Initialise periodic reporting """

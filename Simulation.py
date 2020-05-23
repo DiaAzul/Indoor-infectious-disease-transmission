@@ -40,7 +40,7 @@ class Simulation:
     def create_microenvironments(self):
         """ Create the microenvironments used within the simulation """
         volume = 75 # m^3
-        air_exchange_rate = 2.2  # h^-1: natural ventilation (0.2) mechanical ventilation (2.2)  
+        air_exchange_rate = 0.2  # h^-1: natural ventilation (0.2) mechanical ventilation (2.2)  
         environment_name = 'Pharmacy'
         capacity = 5
 

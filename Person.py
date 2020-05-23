@@ -19,7 +19,7 @@ class Person:
     # create a unique ID counter
     get_new_id = itertools.count()
 
-    def __init__(self, env, dc, quanta_emission_rate):
+    def __init__(self, env, dc, person_type, quanta_emission_rate):
         """ Establish the persons characteristics, this will be specific to each model
 
         Keyword arguments:
@@ -29,6 +29,7 @@ class Person:
         self.env = env
         self.dc = dc
 
+        # Simpy events
         self.left_microenvironment = self.env.event()
 
         # keep a record of person IDs
@@ -37,12 +38,12 @@ class Person:
         # Routing is the list of environments that the person traverses
         self.routing = []
 
-
+        # Person type is a characteristic which affects behabviour in the microenvironment
+        self.person_type = person_type
 
     def get_PID(self):
         """ Return the Person ID (PID) """
         return self.PID
-
 
     def enqueue(self, microenvironment, **kwargs):
         """ Enqueue a microenvironment to the routing list 
@@ -83,12 +84,6 @@ class Person:
         # For each microenvironment that the person visits
         while self.routing:
             microenvironment, kwargs = self.routing.pop()
-            callback = microenvironment.entry_callback()
+            callback = microenvironment.entry_callback(visit_type=self.person_type)
             self.env.process(callback(self, **kwargs))
             yield self.left_microenvironment
-
-        """********************************************************************************
-        We need to have a yield somewhere in this function.
-
-        once we have set the process running we need to yield until it completes.
-        *********************************************************************************"""
