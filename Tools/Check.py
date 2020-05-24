@@ -67,17 +67,30 @@ class CheckList:
     @staticmethod
     def fail_if_empty(li):
         """ Check whether a list is empty """
-
         if not li:
             raise ValueError('list must have at least one entry')
 
     @staticmethod
-    def is_a_dictionary(li):
+    def fail_if_not_in_list(test_item, li):
+        """ fail if item is not in the list """
+        in_list = False
+        for item in li:
+            if item == test_item:
+                in_list = True
+                break
+
+        if not in_list:
+            raise ValueError('Item not in list')
+
+    @staticmethod
+    def is_a_dictionary(di):
         """ Check whether variable is a list """
-        if not isinstance(li, dict):
+        if not isinstance(di, dict):
             raise ValueError('This must be a dictionary')
 
     @staticmethod
-    def fail_if_this_key_in_the_dictionary(test_key, li):
-        if test_key in li:
+    def fail_if_this_key_in_the_dictionary(test_key, di):
+        if test_key in di:
             raise ValueError('Cannot have duplicate keys in dictionary')
+
+    

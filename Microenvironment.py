@@ -4,6 +4,7 @@ import simpy
 import math
 from Tools.Check import Check
 from DataCollection import DataCollection
+from DiseaseProgression import DiseaseProgression
 
 class Microenvironment:
     """ Class to implement a microenvironment as a simpy discreate event simulation """
@@ -51,6 +52,7 @@ class Microenvironment:
         # Visitors that can't get in immediately join a queue
         self.visitor_limit = None
         self.visitors = 0
+        self.queueing = 0
 
         # Set up periodic reporting
         self.initialise_periodic_reporting()
@@ -105,7 +107,7 @@ class Microenvironment:
         
         return quanta_concentration   
 
-    def process_staff(self, person, duration, infected=0, quanta_emission_rate=0):
+    def process_staff(self, person, duration):
         """ Introduce staff person to the microenvironment
 
         Keyword arguments:
@@ -114,7 +116,16 @@ class Microenvironment:
         """
         yield self.env.timeout(duration)
 
-    def process_visitor(self, person, duration, infected=0, quanta_emission_rate=0):
+    def log_visitor_activity(self, activity):
+        """ Log visitor activity within the process visitor process 
+        
+        Keyword arguments:
+        activity                  String descibing the activity that has occured.
+        """
+        # self.dc.log_reporting('Visitor activity', {'queue':self.queueing, 'visitors':self.visitors, 'activity': activity})
+        self.dc.log_reporting('Visitor activity', {'queue':len(self.microenvironment.queue), 'visitors':len(self.microenvironment.users), 'activity': activity})
+
+    def process_visitor(self, person, duration):
         """ Introduce a person to the microenvironment
 
         Keyword arguments:
@@ -123,20 +134,25 @@ class Microenvironment:
         """
         # Request entry into the microenvironment
         with self.microenvironment.request() as request_entry:
+            self.log_visitor_activity("Visitor {PID} requests entry.".format(PID=person.PID))         
             yield request_entry
 
+            infected = person.infection_status.is_state('infected')
+
             # Granted an entry
-            self.visitors += 1
             self.infected += infected
-            self.total_quanta_emission_rate += quanta_emission_rate if infected else 0
+            self.total_quanta_emission_rate += person.quanta_emission_rate if infected else 0
  
            # Wait in the shop
+            self.log_visitor_activity("Visitor {PID} entered.".format(PID=person.PID)) 
+            
+
             yield self.env.timeout(duration)
 
-            self.total_quanta_emission_rate -= quanta_emission_rate if infected else 0
+            self.total_quanta_emission_rate -= person.quanta_emission_rate if infected else 0
             self.infected -= infected
-            self.visitors -= 1
 
+            self.log_visitor_activity("Visitor {PID} left.".format(PID=person.PID)) 
             person.left_microenvironment.succeed()
 
 
@@ -160,14 +176,12 @@ class Microenvironment:
 
     def initialise_periodic_reporting(self):
         """ Initialise periodic reporting """
-        # TODO: If we can get column dictionary from callback then move code to initialise in DC
 
         data_set_name = 'Quanta concentration'
         callback = self.periodic_reporting_callback
         periods = 1
-        column_dictionary = self.periodic_reporting_callback()
 
-        self.dc.create_period_reporting(data_set_name, callback, periods, column_dictionary)
+        self.dc.create_period_reporting(data_set_name, callback, periods)
 
     def periodic_reporting_callback(self):
         """ Callback to collect data for periodic reporting """

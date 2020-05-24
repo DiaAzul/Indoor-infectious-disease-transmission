@@ -6,6 +6,7 @@ import itertools
 from Tools.Check import Check, CheckList
 from Microenvironment import Microenvironment
 from DataCollection import DataCollection
+from DiseaseProgression import DiseaseProgression
 
 class Person:
     """ Class to implement a person as a simpy discreate event simulation
@@ -19,7 +20,7 @@ class Person:
     # create a unique ID counter
     get_new_id = itertools.count()
 
-    def __init__(self, env, dc, person_type=None):
+    def __init__(self, env, dc, infection_status_label=None, quanta_emission_rate=None, person_type=None):
         """ Establish the persons characteristics, this will be specific to each model
 
         Keyword arguments:
@@ -34,6 +35,11 @@ class Person:
 
         # keep a record of person IDs
         self.PID = next(Person.get_new_id)
+
+        # Characteristics
+        self.infection_status = DiseaseProgression(infection_status_label)
+        self.quanta_emission_rate = quanta_emission_rate
+
 
         # Routing is the list of environments that the person traverses
         self.routing = []

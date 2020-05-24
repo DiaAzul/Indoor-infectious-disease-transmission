@@ -2,13 +2,14 @@
 
 import simpy
 import math
-from time import process_time
+import time
 
 # Import local libraries
 from Tools.Check import Check
 from Microenvironment import Microenvironment
 from Person import Person
 from DataCollection import DataCollection
+from DiseaseProgression import DiseaseProgression
 
 class Simulation:
     """ Class to implement a simulation using simpy discreate event simulation
@@ -43,10 +44,10 @@ class Simulation:
         self.population = {}
 
 
-    def get_list_of_results(self):
+    def get_list_of_reports(self):
         """ Get the list of result tables """
-        #TODO: Get list of result tables from DataCollection
-        pass
+
+        return self.dc.get_list_of_reports()
 
 
     def get_results(self, data_set_name):
@@ -67,9 +68,7 @@ class Simulation:
     def create_routing(self, person, **kwargs):
         """ Create the routing for a person """
         person.enqueue(self.microenvironments['Pharmacy'], 
-                            duration=kwargs['duration'], 
-                            infected=kwargs['infected'], 
-                            quanta_emission_rate=kwargs['quanta_emission_rate'])
+                            duration=kwargs['duration'])
 
 
     def create_people(self, arrivals_per_hour):
@@ -79,11 +78,11 @@ class Simulation:
         is_someone_infected = False
 
         while True:        
-            infected = 0 if is_someone_infected else 1
+            infection_status_label = DiseaseProgression.valid_state('susceptible') if is_someone_infected else DiseaseProgression.valid_state('infected')
             is_someone_infected = True
 
-            person = Person(self.env, self.dc, person_type='visitor')
-            self.create_routing(person, duration=duration, infected=infected, quanta_emission_rate=quanta_emission_rate)
+            person = Person(self.env, self.dc, person_type='visitor', infection_status_label=infection_status_label, quanta_emission_rate=quanta_emission_rate)
+            self.create_routing(person, duration=duration)
             self.env.process(person.run())
 
             time_to_next_person = 60 / arrivals_per_hour
@@ -98,10 +97,7 @@ class Simulation:
         report_time         When True the simulation prints the time taken to execute the simulation to console.
         """
         arrivals_per_hour = 100
-
-        # Start the data collection process
-        self.env.process(self.dc.run())
-        
+      
         # Start the microenvironments
         self.create_microenvironments()
         for key in self.microenvironments:
@@ -111,14 +107,14 @@ class Simulation:
         self.env.process(self.create_people(arrivals_per_hour))
 
         # Run the model
-        t_start = process_time()        
+        t_start = time.time()        
         if report_time:         
             print("Running the model for {periods} periods".format(periods=periods))
         
         self.env.run(until=periods)
 
         if report_time:
-            t_end = process_time()
+            t_end = time.time()
             t_duration = t_end - t_start
             print("Simulation finished. Execution time:{duration:.3f} seconds".format(duration=t_duration))
     
