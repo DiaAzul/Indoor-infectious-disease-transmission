@@ -30,7 +30,8 @@ class Microenvironment:
         Check.is_greater_than_zero(air_exchange_rate)
 
         self.env = env
-        self.dc = dc
+        self.dc = dc   
+
         self.time_interval = time_interval
         self.volume = volume
         self.air_exchange_rate = air_exchange_rate
@@ -44,6 +45,8 @@ class Microenvironment:
 
         # Initialise the building environment
         self.quanta_concentration = 0.0
+        self.quanta_in_microenvironment = 0.0
+
         # Assume there are no infected people in the building at start
         self.infected = 0.0
         self.total_quanta_emission_rate = 0.0
@@ -61,41 +64,45 @@ class Microenvironment:
     def run(self):
         """ Calculate the new quanta concentration in the building """
         while True:
-            yield self.env.timeout(1)
 
             if self.total_quanta_emission_rate and self.infected:
                 quanta_emission_rate = self.total_quanta_emission_rate / self.infected
             else:
                 quanta_emission_rate = 1
             
+            # TODO: Remove this calculation and shift to quanta_in_microenvironment
             self.quanta_concentration = self.calc_quanta_concentration(1, self.infected, 
                                                 quanta_emission_rate,
                                                 self.quanta_concentration,
                                                 self.time_interval)
 
+            self.quanta_in_microenvironment = self.quanta_in_microenvironment * math.exp(-self.air_exchange_rate * self.time_interval)                                               
 
+            yield self.env.timeout(1)                                                
+            
+
+    # TODO: Remove this code once we shift to quanta_in_microenvironment
     # Calculate the quanta concentration at time t
     def calc_quanta_concentration(self, t, infected, quanta_emission_rate, initial_concentration=0.0, time_interval=1.0):
         """ Calculate the quanta concentration at time t
 
-        Keyword arguments:
-        t                       Number of time intervals in the future when concentration is calculated
-        infected                The number of infectious subjects 
-        quanta_emission_rate    Rate at which an infected person emits infectious droplets
-        initial_concentration   Quanta concentration at the start of the period (default=0.0)
-                                Note: Original paper n0 is absolute quanta, not concentration
-        time_interval           Scaling factor for time interval to enable sub-unit calculations (default=1.0, minutes would be 1/60th of an hour)
+            Keyword arguments:
+            t                       Number of time intervals in the future when concentration is calculated
+            infected                The number of infectious subjects 
+            quanta_emission_rate    Rate at which an infected person emits infectious droplets
+            initial_concentration   Quanta concentration at the start of the period (default=0.0)
+                                    Note: Original paper n0 is absolute quanta, not concentration
+            time_interval           Scaling factor for time interval to enable sub-unit calculations (default=1.0, minutes would be 1/60th of an hour)
 
-        Return value:
-        quanta_concentration    Concentration of quanta at time period t.
+            Return value:
+            quanta_concentration    Concentration of quanta at time period t.
 
-        Note conventions:
-            Time period is measured in hours
-            Volumes are metres^3
-            Concentration is quanta per m^3 (for initial concentration and returned results)
-            Emmission rate is quanta per hour
+            Note conventions:
+                Time period is measured in hours
+                Volumes are metres^3
+                Concentration is quanta per m^3 (for initial concentration and returned results)
+                Emmission rate is quanta per hour
         """
-
         Check.is_greater_than_zero(t)
         Check.is_greater_than_or_equal_to_zero(infected)
         Check.is_greater_than_zero(quanta_emission_rate)
@@ -107,63 +114,90 @@ class Microenvironment:
         
         return quanta_concentration   
 
+
+    def add_quanta_to_microenvironment(self, quanta):
+        """ Callback from person class to add quanta to the microenvironment
+        
+            Arguments:
+            quanta              The number of quanta to add to the microenvironment
+        """
+        Check.is_greater_than_or_equal_to_zero(quanta)
+        self.quanta_in_microenvironment += quanta
+
+
+    def get_quanta_concentration(self):
+        """ Callback from person class to get the quanta concentration """
+        return self.quanta_in_microenvironment / self.volume
+
+
     def process_staff(self, person, duration):
         """ Introduce staff person to the microenvironment
 
-        Keyword arguments:
-        quanta_emission_rate    Rate at which an infected person emits infectious droplets
-        duration  
+            Keyword arguments:
+            quanta_emission_rate    Rate at which an infected person emits infectious droplets
+            duration  
         """
         yield self.env.timeout(duration)
 
     def log_visitor_activity(self, activity):
         """ Log visitor activity within the process visitor process 
         
-        Keyword arguments:
-        activity                  String descibing the activity that has occured.
+            Arguments:
+            activity                  String descibing the activity that has occured.
         """
         # self.dc.log_reporting('Visitor activity', {'queue':self.queueing, 'visitors':self.visitors, 'activity': activity})
         self.dc.log_reporting('Visitor activity', {'queue':len(self.microenvironment.queue), 'visitors':len(self.microenvironment.users), 'activity': activity})
 
-    def process_visitor(self, person, duration):
+    # NOTE: Think long and hard about this - process_visitor called from person, which calls back into person for further processing
+    #       where there are futher callbacks into microenvironment. Would it be better to have a message passing hub?
+    #       WHAT IS THE MEDIATOR BETWEEN MICROENVIRONMENT AND PERSON? -> AIR/QUANTA CONCENTRATION
+    def process_visitor(self, person, person_left_microenvironment, duration):
         """ Introduce a person to the microenvironment
 
-        Keyword arguments:
-        quanta_emission_rate    Rate at which an infected person emits infectious droplets
-        duration                Length of time that infected person remains in the microenvironment
+            Arguments:
+            quanta_emission_rate    Rate at which an infected person emits infectious droplets
+            duration                Length of time that infected person remains in the microenvironment
         """
         # Request entry into the microenvironment
         with self.microenvironment.request() as request_entry:
             self.log_visitor_activity("Visitor {PID} requests entry.".format(PID=person.PID))         
             yield request_entry
 
+            # Wait in the shop
+            self.log_visitor_activity("Visitor {PID} entered.".format(PID=person.PID)) 
+
             infected = person.infection_status.is_state('infected')
 
-            # Granted an entry
+            # TODO: This can be removed when we move to people centric code (Do we need infected people count? Can do by calculation?)
             self.infected += infected
             self.total_quanta_emission_rate += person.quanta_emission_rate if infected else 0
- 
-           # Wait in the shop
-            self.log_visitor_activity("Visitor {PID} entered.".format(PID=person.PID)) 
             
+            # TODO: Test people centred code may need to get rid of yield.
+            person_request_to_leave = self.env.event()  
+            if person.infection_status.is_state('infected'):
+                self.env.process(person.infected_visitor(self.add_quanta_to_microenvironment, person_request_to_leave, duration))
+                yield person_request_to_leave
 
-            yield self.env.timeout(duration)
+            elif person.infection_status.is_state('susceptible'):
+                self.env.process(person.susceptible_visitor(self.get_quanta_concentration, person_request_to_leave, duration))
+                yield person_request_to_leave
 
+           # TODO: This can be removed when we move to people centric code (reciprocal of above)
             self.total_quanta_emission_rate -= person.quanta_emission_rate if infected else 0
             self.infected -= infected
 
             self.log_visitor_activity("Visitor {PID} left.".format(PID=person.PID)) 
-            person.left_microenvironment.succeed()
+            person_left_microenvironment.succeed()
 
 
     def entry_callback(self, visit_type=None):
         """ Method to call when a person needs entry to the microenvironment
 
-        Keyword arguments:
-        visit_type             Request for entry point for type of person or visit
+            Arguments:
+            visit_type             Request for entry point for type of person or visit
 
-        Return value:
-        Method to call for that particular visit or person type
+            Return value:
+            Method to call for that particular visit or person type
         """
         callbacks = {
             'staff':self.process_staff,
@@ -176,7 +210,6 @@ class Microenvironment:
 
     def initialise_periodic_reporting(self):
         """ Initialise periodic reporting """
-
         data_set_name = 'Quanta concentration'
         callback = self.periodic_reporting_callback
         periods = 1
