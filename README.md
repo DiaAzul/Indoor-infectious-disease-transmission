@@ -17,3 +17,11 @@ The model uses simpy as the underpinning discrete event simulation framework. On
 * **DataCollection** - The data collection class is reponsible for collating data from across the simulation either by periodic sampling or receiving and logging data as it is submitted.
 
 The simulation is designed such that it can be run and analysed within a Jupyter notebook.
+
+
+## Installation
+The simulation is dependent upon the following packages. A YAML file is included to create a conda environment, however, simpy is not included within the conda repository and needs to be installed by activating the conda environment then installing simpy (pip install simpy):
+* simpy >= 4.0
+* plotly >= 4.7
+* pandas >= 1.0.3
+* numpy >= 1.18

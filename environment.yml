@@ -1,0 +1,10 @@
+name: DES2020
+channels:
+- conda-forge
+dependencies:
+- Python>=3.7.0
+- plotly>= 4.7.0
+- pandas>=1.0.3
+- numpy>=1.18.0
+- pip
+- jupyter>=1.0.0 
