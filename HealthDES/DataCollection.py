@@ -6,7 +6,8 @@ from io import BytesIO, StringIO
 from csv import DictWriter, reader
 
 # Import local libraries
-from Tools.Check import Check, CheckList
+# pylint: disable=relative-beyond-top-level
+from .Check import Check, CheckList
 
 class DataCollection:
     """ Class to collect data from across the simulation

@@ -1,6 +1,6 @@
 """ Python library to model the spread of infectious diseases within a microenvironment """
 
-from Tools.Check import CheckList
+from HealthDES.Check import CheckList
 
 class DiseaseProgression:
     """ Disease status of person within the model """

@@ -3,9 +3,10 @@
 import simpy
 import math
 
-from HealthDES.Check import Check
-from HealthDES.DataCollection import DataCollection
-from DiseaseProgression import DiseaseProgression
+# pylint: disable=relative-beyond-top-level
+from .Check import Check
+from .DataCollection import DataCollection
+from .DiseaseProgression import DiseaseProgression
 
 class Microenvironment:
     """ Class to implement a microenvironment as a simpy discreate event simulation """
@@ -74,22 +75,6 @@ class Microenvironment:
         """        
         return self.microenvironment.request()
 
-    def get_queue_length(self):
-        """Get the number of people waiting in the queue
-
-        Returns:
-            {integer} -- Number of people waiting in the queue
-
-        """        
-        return len(self.microenvironment.queue)
-
-    def get_active_users(self):
-        """Get the number of people in the microenvironment
-
-        Returns:
-            {integer} -- Number of active people in the microenvironment
-        """
-        return len(self.microenvironment.users)
 
     # Calculate quanta load and report quanta per unit volume
 
@@ -121,70 +106,3 @@ class Microenvironment:
     def periodic_reporting_callback(self):
         """ Callback to collect data for periodic reporting """
         return {'quanta_concentration':self.get_quanta_concentration()}
-
-
-    # ******************************************************************************
-    # TODO: Delete from here
-
-
-    def log_visitor_activity(self, activity):
-        """ Log visitor activity within the process visitor process 
-        
-            Arguments:
-            activity                  String descibing the activity that has occured.
-        """
-        # self.dc.log_reporting('Visitor activity', {'queue':self.queueing, 'visitors':self.visitors, 'activity': activity})
-        self.dc.log_reporting('Visitor activity', {'queue':len(self.microenvironment.queue), 'visitors':len(self.microenvironment.users), 'activity': activity})
-
-
-    def process_visitor(self, person, person_left_microenvironment, duration):
-        """ Introduce a person to the microenvironment
-
-            Arguments:
-            quanta_emission_rate    Rate at which an infected person emits infectious droplets
-            duration                Length of time that infected person remains in the microenvironment
-        """
-        # Request entry into the microenvironment
-        with self.microenvironment.request() as request_entry:
-            self.log_visitor_activity("Visitor {PID} requests entry.".format(PID=person.PID))         
-            yield request_entry
-
-            # Wait in the shop
-            self.log_visitor_activity("Visitor {PID} entered.".format(PID=person.PID))
-
-            person_request_to_leave = self.env.event()
-
-            if person.infection_status.is_state('infected'):
-                self.env.process(person.infected_visitor(self.add_quanta_to_microenvironment, person_request_to_leave, duration))
-                yield person_request_to_leave
-
-            elif person.infection_status.is_state('susceptible'):
-                self.env.process(person.susceptible_visitor(self.get_quanta_concentration, person_request_to_leave, duration))
-                yield person_request_to_leave
-
-            self.log_visitor_activity("Visitor {PID} left.".format(PID=person.PID))
-
-            person_left_microenvironment.succeed()
-
-
-    def entry_callback(self, visit_type=None):
-        """ Method to call when a person needs entry to the microenvironment
-
-            Arguments:
-            visit_type             Request for entry point for type of person or visit
-
-            Return value:
-            Method to call for that particular visit or person type
-        """
-        callbacks = {
-            'visitor':self.process_visitor
-        }
-
-        callback = callbacks.get(visit_type, self.process_visitor)
-
-        return callback
-
-
-    # TODO: Until here
-    # ***************************************************************************************
-
