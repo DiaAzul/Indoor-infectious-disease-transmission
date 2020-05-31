@@ -58,8 +58,6 @@ class Simulation:
         self.population = {}
 
 
-
-
     def get_list_of_reports(self):
         """Get the list of reports.
 
@@ -91,12 +89,6 @@ class Simulation:
 
         self.microenvironments[environment_name] = Microenvironment(self.simulation_params, volume, air_exchange_rate, capacity=capacity)
 
-
-    # TODO: Remove list based code once network code in place.
-    def create_routing(self, person, **kwargs):
-        """Create the routing for a person."""
-        person.enqueue(self.microenvironments['Pharmacy'], 
-                            duration=kwargs['duration'])
 
     def create_activities(self):
         """Create a dictionary of activities."""

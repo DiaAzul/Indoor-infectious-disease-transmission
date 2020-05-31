@@ -79,31 +79,3 @@ class Person_base:
             self.env.process(this_activity_class.start(finished_activity))
             yield finished_activity
 
-
-    # TODO: Remove once network routing implemented
-    def enqueue(self, microenvironment, **kwargs):
-        """Enqueue a microenvironment to the routing list 
-
-        Arguments:
-            microenvironment {obj.method}   -- The microenvironment to which the person is routed
-            parameters                      -- Parameters passed to the microenvironment when called (optional)   
-        """        
-        self.routing.insert(0, (microenvironment, kwargs) )  
-
-    # TODO: Remove once network routing implemented
-    def dequeue(self):
-        """[summary]
-
-        Returns:
-            microenvironment {obj.method}   -- The microenvironment to which the person is routed
-            parameters                      -- Parameters passed to the microenvironment when called (optional)   
-        """        
-        CheckList.fail_if_empty(self.routing)
-
-        return self.routing.pop()
-
-    # TODO: Remove once network routing implemented
-    def clear_routing(self):
-        """Clear the routing list """
-        self.routing = []
-
