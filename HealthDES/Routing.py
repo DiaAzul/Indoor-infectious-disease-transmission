@@ -31,6 +31,44 @@ class Routing:
         # Dictionary of activities and reference to implementation classes
         self.activities = {}
 
+
+    # Methods to interact with the activity dictionary
+
+    def register_activity(self, activity_name, activity_class, arguments):
+        """Register an activity with the activity registry
+
+        Arguments:
+            activity_name {string} -- Name of the activity to register
+            activity_class {class ojb} -- Activity class, a child instance of this class
+            arguments {dictionary} -- dictionary of arguments passed to the activity when called
+        """
+        self.activities[activity_name] = (activity_class, arguments)
+
+
+    def get_activities(self):
+        """Get the list of registered activities
+
+        Returns:
+            Dictionary -- Dictionary of registered activities.
+        """        
+        return self.activities
+
+
+    def get_activity_details(self, activity_name):
+        """Return a tuple containing the activity class and arguments
+
+        Arguments:
+            activity_name {string} -- Name of the activity
+
+        Returns:
+            (class obj, dictionary) -- Class for the activity, parameters to pass to activity when instance created
+        """
+        return self.activities[activity_name]
+
+
+    # Methods to interact with the routing graph
+    # TODO: Switch nodes and edges around - Node is the activity, edges are the transitions between activities (better for display)
+
     def add_decision(self, name):
         """Create a decision point in the graph with decision function"""
 
@@ -54,7 +92,7 @@ class Routing:
         # TODO: This assumes we only have one possible edge from Node, the code will need to be developed
         # to include routing logic.
         if node_id:
-            # For each of the available edgers
+            # For each of the available edges
             for items in self.G.out_edges(node_id, keys=True):
                 _,  next_id, activity_id =  items
             activity_class, arguments = self.activities[activity_id]

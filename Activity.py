@@ -11,10 +11,10 @@ from DiseaseProgression import DiseaseProgression
 from Microenvironment import Microenvironment
 from Person import Person
 
-class Visitor_activity:
+class Visitor_activity():
     """Person's activity within the system, models interaction between poeple and environment """
-    
-    def __init__(self, simulation_params, person, **kwargs):
+
+    def __init__(self, simulation_params, **kwargs):
         """Create a new activity
 
         Arguments:
@@ -24,10 +24,43 @@ class Visitor_activity:
         self.dc = simulation_params.get('data_collector', None)
         self.time_interval = simulation_params.get('time_interval', None)
 
-        # Activity participants
-        self.person = person        
+        self.unpack_parameters(**kwargs)
+
+
+    """
+    The following pair of methods define the parametes passed to the activity. The pack method is used to 
+    create the dictionary of parameters stored in the activity dictionary. The method is static as it is
+    called on the class before an instance is created. The unpack parameter class is called when the parameters
+    are read from the activity dictionary and used to create an actual instance of the activity prior to it
+    being called (started). 
+    """
+
+    def unpack_parameters(self, **kwargs):
+        """Unpack the parameter list and store in local intance variables.
+        """        
+
+        self.person = kwargs['person']      
         self.microenvironment = kwargs['microenvironment']
         self.duration = kwargs['duration']
+
+
+    @classmethod
+    def pack_parameters(cls, microenvironment, duration):
+        """Pack parameters for the activity into a dictionary.
+
+        Arguments:
+            microenvironment {microenvironment obj} -- Microenvironment that the person will enter
+            duration {number} -- Amount of time person spends in the environment
+
+        Returns:
+            Typle(class, dictionary) -- This class and a dictionary of parameters required to instantiate an instance
+        """
+
+        parameters = {  'microenvironment':microenvironment,
+                        'duration':duration
+                        }
+
+        return cls, parameters
 
 
     # Entry point to the activity
@@ -125,5 +158,5 @@ class Visitor_activity:
         # self.dc.log_reporting('Visitor activity', {'queue':self.queueing, 'visitors':self.visitors, 'activity': activity})
         self.dc.log_reporting('Visitor activity',
                              {'queue':self.microenvironment.get_queue_length(),
-                              'visitors':self.microenvironment.get_active_users,
+                              'visitors':self.microenvironment.get_active_users(),
                                'activity': activity})

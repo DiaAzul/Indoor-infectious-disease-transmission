@@ -95,14 +95,11 @@ class Simulation:
 
         duration=10
         activity_name = 'visit environment'
-        arguments = {
-                    'microenvironment': self.microenvironments['Pharmacy'],
-                    'duration':duration
-                    }
+        activity_class, arguments = Visitor_activity.pack_parameters(self.microenvironments['Pharmacy'], duration)
 
-        activity_class = Visitor_activity
+        self.routing.register_activity(activity_name, activity_class, arguments)
 
-        self.routing.activities[activity_name] = (activity_class, arguments)
+        # self.routing.activities[activity_name] = (activity_class, arguments)
 
 
     def create_network_routing(self):
@@ -115,11 +112,9 @@ class Simulation:
 
         self.routing.add_activity('visit environment', 'start', 'end')
 
-
         return routing_entry_point
 
 
-    # TODO: Perhaps this is more than create people, this becomes the runner.
     def create_people(self, arrivals_per_hour):
         """ Create a method of generating people """
         quanta_emission_rate = 147

@@ -67,15 +67,17 @@ class Person_base:
         """
         # For each microenvironment that the person visits
         while self.routing_node_id != 'end':
-            # microenvironment, kwargs = self.routing.pop()
+            # Get the next node, and this activity class and arguments.
             self.routing_node_id, activity_class, kwargs = self.routing.get_next_activity(self.routing_node_id)
-            finished_activity = self.env.event()
-            # callback = microenvironment.entry_callback(visit_type=self.person_type)
 
-            this_activity_class = activity_class(self.simulation_params, self, **kwargs)
+            # Add this instance to the arguments list
+            kwargs['person'] = self
+
+            # Create a parameterised instance of the activity
+            this_activity_class = activity_class(self.simulation_params, **kwargs)
             
-            # Need to find a way to pass variable args
-            # self.env.process(activity_class.start(self, finished_activity, **kwargs))
+            # set an event flag to mark end of activity and call the activity class
+            finished_activity = self.env.event()           
             self.env.process(this_activity_class.start(finished_activity))
             yield finished_activity
 
