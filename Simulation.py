@@ -130,13 +130,14 @@ class Simulation:
     def create_activities(self, microenvironment_name):
         """Create a dictionary of activities."""
 
-        duration=10
+        duration = self.config.microenvironments.get(microenvironment_name).get('average-length-of-stay')
+        duration = duration / self.time_interval # Convert hours to time measures
+
         activity_name = 'visit environment'
         activity_class, arguments = Visitor_activity.pack_parameters(self.microenvironments[microenvironment_name], duration)
 
         self.routing.register_activity(activity_name, activity_class, arguments)
 
-        # self.routing.activities[activity_name] = (activity_class, arguments)
 
 
     def create_network_routing(self):
@@ -181,7 +182,7 @@ class Simulation:
             if max_arrivals and (generated_people >= max_arrivals): break
 
 
-    def run(self, arrivals_per_hour=100, quanta_emission_rate=None, inhalation_rate=None, max_arrivals=None, report_time=None):
+    def run(self, arrivals_per_hour=None, quanta_emission_rate=None, inhalation_rate=None, max_arrivals=None, report_time=None):
         """ Run the simulation 
 
         Keyword arguments:
@@ -196,8 +197,22 @@ class Simulation:
 
         # Start the microenvironments
         self.create_microenvironments()
-        for key in self.microenvironments:
-            self.env.process(self.microenvironments[key].run())
+        
+        # Comment out running all
+        #for key in self.microenvironments:
+        #    self.env.process(self.microenvironments[key].run())
+        self.env.process(self.microenvironments.get(self.microenvironment_name).run())
+
+        if arrivals_per_hour == None:
+            arrivals_per_hour = self.config.microenvironments.get(self.microenvironment_name).get('visitor-arrival-rate')
+
+        if not max_arrivals:
+            temp = self.config.microenvironments.get(self.microenvironment_name).get('max_arrivals', 0)
+            if temp > 0:
+                max_arrivals = temp
+            else:
+                max_arrivals = simpy.core.Infinity
+
 
         # Create activities
         self.create_activities(self.microenvironment_name)

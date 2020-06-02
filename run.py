@@ -5,9 +5,9 @@ from Simulation import Simulation
 
 if __name__ == "__main__":
     periods = 100
-    simulation_name = 'Pharmacy-natural'
+    simulation_name = 'Pharmacy-natural-No Lockdown'
     simulation_run = 1
-    arrivals_per_hour=100
+    arrivals_per_hour=None
     max_arrivals=None
     quanta_emission_rate=147
     inhalation_rate=0.54

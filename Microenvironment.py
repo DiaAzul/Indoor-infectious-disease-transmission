@@ -48,6 +48,7 @@ class Microenvironment:
         if capacity is None:
             self.capacity = simpy.core.Infinity
         else:
+            Check.is_greater_than_zero(capacity)
             self.capacity = capacity
 
         self.microenvironment = simpy.Resource(self.env, self.capacity)
