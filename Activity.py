@@ -11,6 +11,7 @@ from DiseaseProgression import DiseaseProgression
 from Microenvironment import Microenvironment
 from Person import Person
 
+
 class Visitor_activity():
     """Person's activity within the system, models interaction between poeple and environment """
 
@@ -18,7 +19,8 @@ class Visitor_activity():
         """Create a new activity
 
         Arguments:
-            simulation_params {Obj} -- Parameters for the simulation
+            simulation_params {dictionary} -- keyword arguments for the simulation
+            kwargs {dictionary} -- Keyword arguments for the activity
         """
         self.env = simulation_params.get('simpy_env', None)
         self.dc = simulation_params.get('data_collector', None)
@@ -36,8 +38,7 @@ class Visitor_activity():
     """
 
     def unpack_parameters(self, **kwargs):
-        """Unpack the parameter list and store in local intance variables.
-        """        
+        """Unpack the parameter list and store in local intance variables."""        
 
         self.person = kwargs['person']      
         self.microenvironment = kwargs['microenvironment']
@@ -78,6 +79,7 @@ class Visitor_activity():
 
             # Wait in the shop
             self.log_visitor_activity("Visitor {PID} entered.".format(PID=self.person.PID))
+            self.dc.counter_increment('Total visitors')
 
             person_request_to_leave = self.env.event()
 
@@ -88,6 +90,7 @@ class Visitor_activity():
                 yield person_request_to_leave
 
             elif self.person.infection_status.is_state('susceptible'):
+                
                 self.env.process(self.susceptible_visitor(self.microenvironment.get_quanta_concentration,
                                                             person_request_to_leave,
                                                             self.duration))
@@ -153,7 +156,7 @@ class Visitor_activity():
         """Log visitor activity within the process visitor process 
         
             Arguments:
-            activity                  String descibing the activity that has occured.
+            activity                  String describing the activity that has occured.
         """
         # self.dc.log_reporting('Visitor activity', {'queue':self.queueing, 'visitors':self.visitors, 'activity': activity})
         self.dc.log_reporting('Visitor activity',

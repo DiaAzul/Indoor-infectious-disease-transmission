@@ -2,6 +2,7 @@
 
 import simpy
 import math
+import random
 import itertools
 
 from HealthDES.DataCollection import DataCollection
@@ -18,7 +19,7 @@ class Person(Person_base):
         which are callled as each one completes.
     """
 
-    def __init__(self, simulation_params, starting_node_id, infection_status_label=None, quanta_emission_rate=None, person_type=None):
+    def __init__(self, simulation_params, starting_node_id, infection_status_label=None, quanta_emission_rate=None, inhalation_rate=None, person_type=None):
         """ Establish the persons characteristics, this will be specific to each model
 
             Keyword arguments:
@@ -29,8 +30,11 @@ class Person(Person_base):
         
         # Characteristics
         self.infection_status = DiseaseProgression(infection_status_label)
-        self.quanta_emission_rate = quanta_emission_rate
+        self.quanta_emission_rate = quanta_emission_rate if quanta_emission_rate else 147
+        self.inhalation_rate = inhalation_rate if inhalation_rate else 0.54  # m^3 h^-1
+
         self.cumulative_exposure = 0
+        self.infected = False
 
 
     def get_quanta_emission_rate(self):
@@ -48,5 +52,32 @@ class Person(Person_base):
 
         Arguments:
             quanta_concentration {Number} -- Concentration of quanta the person is exposed to
-        """        
-        pass
+        """ 
+        self.cumulative_exposure += quanta_concentration
+        self.log_infection_risk()
+
+        if random.random() < self.infection_risk():
+            if self.infection_status.is_state('susceptible'):
+                self.log_infection()
+                self.dc.counter_increment('Infections')
+     
+            self.infection_status.set_state('exposed')
+
+
+    def infection_risk(self):
+        """Determine risk that a patient is infected"""
+        return  1 - math.exp(-self.inhalation_rate* self.time_interval * self.cumulative_exposure)
+
+
+    def log_infection_risk(self):
+        """Log visitors infection risk"""
+        self.dc.log_reporting('Infection risk',
+                             {'Person':self.PID,
+                               'Infection risk': self.infection_risk()})    
+
+    
+    def log_infection(self):
+        """Log visitor activity within the process visitor process"""
+        self.dc.log_reporting('Infections',
+                             {'Person':self.PID})
+        

@@ -10,15 +10,17 @@ from DiseaseProgression import DiseaseProgression
 class Microenvironment:
     """ Class to implement a microenvironment as a simpy discreate event simulation """
 
-    def __init__(self, simulation_params, volume, air_exchange_rate, capacity=None):
-        """ Initialise the microenvironment 
+    def __init__(self, simulation_params, environment_name, volume, air_exchange_rate, capacity=None):
+        """Initialise the microenvironment
 
-        Keyword arguments:
-        env                     A simpy environment
-        dc                      Data collection object
-        time_interval           Scaling factor for time interval to enable sub-unit calculations (default=1.0, minutes would be 1/60th of an hour)
-        volume                  Volume of the indoor environment
-        air_exchange_rate       Rate at which air is exchanged
+        Arguments:
+            simulation_params {dictionary} -- Parameters for that drive the simulation
+            environment_name {string} -- Unique name to identify this microenvironment
+            volume {number} -- Volume of the indoor environment
+            air_exchange_rate {number} -- Rate at which air is exchanged in the indoor environment
+
+        Keyword Arguments:
+            capacity {number} -- Maximum number of people in the microenvironment at any one time (default: {None})
 
         Note conventions:
             Time period is measured in hours
@@ -34,6 +36,7 @@ class Microenvironment:
         Check.is_greater_than_zero(volume)
         Check.is_greater_than_zero(air_exchange_rate)
 
+        self.environment_name = environment_name
         self.volume = volume
         self.air_exchange_rate = air_exchange_rate
 
@@ -112,7 +115,7 @@ class Microenvironment:
 
     def initialise_periodic_reporting(self):
         """ Initialise periodic reporting """
-        data_set_name = 'Quanta concentration'
+        data_set_name = f'Quanta concentration {self.environment_name}'
         callback = self.periodic_reporting_callback
         periods = 1
 
@@ -120,5 +123,5 @@ class Microenvironment:
 
     def periodic_reporting_callback(self):
         """ Callback to collect data for periodic reporting """
-        return {'quanta_concentration':self.get_quanta_concentration()}
+        return {f'Quanta concentration {self.environment_name}':self.get_quanta_concentration()}
 

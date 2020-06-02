@@ -3,6 +3,7 @@
 import simpy
 import networkx as nx
 
+
 class Routing:
     """Create a routing graph and than route people throug the system
 

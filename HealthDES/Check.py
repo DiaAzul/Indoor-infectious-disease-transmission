@@ -65,7 +65,7 @@ class CheckList:
             raise ValueError('This must be a list')
     
     @staticmethod
-    def fail_if_empty(li):
+    def fail_if_list_empty(li):
         """ Check whether a list is empty """
         if not li:
             raise ValueError('list must have at least one entry')
@@ -87,6 +87,12 @@ class CheckList:
         """ Check whether variable is a list """
         if not isinstance(di, dict):
             raise ValueError('This must be a dictionary')
+
+    @staticmethod
+    def fail_if_dict_empty(li):
+        """ Check whether a list is empty """
+        if not li:
+            raise ValueError('list must have at least one entry')
 
     @staticmethod
     def fail_if_this_key_in_the_dictionary(test_key, di):

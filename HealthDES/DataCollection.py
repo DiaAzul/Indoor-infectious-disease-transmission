@@ -36,6 +36,7 @@ class DataCollection:
         # All the memory tables referenced from dictionary
         self.memory_file = {}
         self.memory_writer = {}
+        self.counters = {}
 
 
     """ Template for periodic reporting
@@ -145,12 +146,46 @@ class DataCollection:
         self.memory_writer[data_set_name].writerow(column_dictionary)
 
 
+    def counter_increment(self, data_set_name, amount=None):
+        """Increment counter
+        
+        Keyword parameters:
+        data_set_name           The name of the dataset into which data stored
+         """
+        # If the report doesn't already exist, create a new report
+        if not (data_set_name in self.counters):
+            self.counters[data_set_name] = 0
+
+        amount = amount if amount else 1
+
+        self.counters[data_set_name] += amount
+
+
+    def counter_decrement(self, data_set_name, amount=None):
+        """Decrement counter
+        
+        Keyword parameters:
+        data_set_name           The name of the dataset into which data stored
+         """
+        # If the report doesn't already exist, create a new report
+        if not (data_set_name in self.counters):
+            self.counters[data_set_name] = 0
+
+        amount = amount if amount else 1
+
+        self.counters[data_set_name] -= amount
+
+    # TODO: Need some error check on data_Set_name to test if exists
     def get_results(self, data_set_name):
         """ Return stored data as a pandas data frame """
         self.memory_file[data_set_name].seek(0)
         df = pd.read_csv(self.memory_file[data_set_name])
 
         return df
+
+    def get_counter(self, data_set_name):
+        """return value of a counter"""
+        return self.counters.get(data_set_name, None)
 
     def get_list_of_reports(self):
         """ Get a list of reports 
