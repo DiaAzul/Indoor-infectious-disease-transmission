@@ -16,6 +16,9 @@ from DiseaseProgression import DiseaseProgression
 from Activity import Visitor_activity
 from Configuration import Config
 
+# TODO: from collections import namedtuple as data_structure [consider how we can use named tuples
+#       within the simulation where there are multiple return values.]
+
 class Simulation:
     """ Class to implement a simulation using simpy discreate event simulation
     
@@ -99,17 +102,6 @@ class Simulation:
             number -- value of the counter
         """
         return self.dc.get_counter(data_set_name)
-
-
-
-    """ Following needs to be updated for configuration information
-        ***********************************************************
-
-        Consider implementing a configuration block that other parts
-        of the simulation can draw upon.
-
-        ************************************************************
-    """
 
 
     def create_microenvironments(self):
@@ -207,7 +199,7 @@ class Simulation:
             arrivals_per_hour = self.config.microenvironments.get(self.microenvironment_name).get('visitor-arrival-rate')
 
         if not max_arrivals:
-            temp = self.config.microenvironments.get(self.microenvironment_name).get('max_arrivals', 0)
+            temp = self.config.microenvironments.get(self.microenvironment_name).get('max-arrivals', 0)
             if temp > 0:
                 max_arrivals = temp
             else:

@@ -31,7 +31,7 @@ class DiseaseProgression:
     def is_state(self, infection_status_label):
         """ Tests disease state and return True if matches """
 
-        CheckList.fail_if_not_in_list(infection_status_label, DiseaseProgression.disease_states)       
+        CheckList.fail_if_not_in_list(infection_status_label, DiseaseProgression.disease_states)    
         return self.status == infection_status_label
 
 

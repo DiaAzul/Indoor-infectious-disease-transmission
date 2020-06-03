@@ -54,9 +54,9 @@ class Person(Person_base):
             quanta_concentration {Number} -- Concentration of quanta the person is exposed to
         """ 
         self.cumulative_exposure += quanta_concentration
-        self.log_infection_risk()
 
-        if random.random() < self.infection_risk():
+        # if random.random() < self.infection_risk():
+        if random.random() < self.infection_risk_instant(quanta_concentration):
             if self.infection_status.is_state('susceptible'):
                 self.log_infection()
                 self.dc.counter_increment('Infections')
@@ -67,6 +67,10 @@ class Person(Person_base):
     def infection_risk(self):
         """Determine risk that a patient is infected"""
         return  1 - math.exp(-self.inhalation_rate* self.time_interval * self.cumulative_exposure)
+
+    def infection_risk_instant(self, quanta_concentration):
+        """Determine risk that a patient is infected"""
+        return  1 - math.exp(-self.inhalation_rate* self.time_interval * quanta_concentration)
 
 
     def log_infection_risk(self):

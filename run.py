@@ -5,7 +5,7 @@ from Simulation import Simulation
 
 if __name__ == "__main__":
     periods = 100
-    simulation_name = 'Pharmacy-natural-No Lockdown'
+    simulation_name = 'Lounge-Two People-Winter-1 hour'
     simulation_run = 1
     arrivals_per_hour=None
     max_arrivals=None
