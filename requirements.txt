@@ -4,3 +4,6 @@ pandas >= 1.0.3
 numpy >= 1.18.0
 openpyxl >= 3.0.3
 newtorkx >= 2.4
+sphinx >=3.0.4
+sphinx-autobuild >=0.7.1
+sphinx_rtd_theme >=0.4.3

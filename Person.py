@@ -20,12 +20,17 @@ class Person(Person_base):
     """
 
     def __init__(self, simulation_params, starting_node_id, infection_status_label=None, quanta_emission_rate=None, inhalation_rate=None, person_type=None):
-        """ Establish the persons characteristics, this will be specific to each model
+        """Establish the persons characteristics, this will be specific to each model
 
-            Keyword arguments:
-            env                     A simpy environment
-            quanta_emission_rate    The rate at which the person emits quanta (convention per hour)                     
+        Args:
+            simulation_params (dict): Dictionary of simulation parameters.
+            starting_node_id (string): id for the starting node within the network graph.
+            infection_status_label (disease_status, optional): Disease status of the person. Defaults to None.
+            quanta_emission_rate (number, optional): Quanta emitted by the person per hour. Defaults to None.
+            inhalation_rate (number, optional): Respiritory rate of the person per hour. Defaults to None.
+            person_type (string, optional): Type of the person (visitor, staff, etc.). Defaults to None.
         """
+
         Person_base.__init__(self, simulation_params, starting_node_id, person_type)
         
         # Characteristics
@@ -46,13 +51,14 @@ class Person(Person_base):
         return self.quanta_emission_rate
 
 
-
     def expose_person_to_quanta(self, quanta_concentration):
-        """Expose person to a quanta
+        """Calculate the amount of quanta the person is exposed to
 
-        Arguments:
-            quanta_concentration {Number} -- Concentration of quanta the person is exposed to
-        """ 
+        Args:
+            quanta_concentration (number): The concentration of infectious material in the environment in quanta
+        """
+
+        # TODO: We don't use cumulative exposure, so can we remove?
         self.cumulative_exposure += quanta_concentration
 
         # if random.random() < self.infection_risk():
@@ -64,12 +70,22 @@ class Person(Person_base):
             self.infection_status.set_state('exposed')
 
 
+    # TODO: Check whether this can be removed
     def infection_risk(self):
         """Determine risk that a patient is infected"""
         return  1 - math.exp(-self.inhalation_rate* self.time_interval * self.cumulative_exposure)
 
+
+    # TODO: Move this inside expose person to quanta (simplify)
     def infection_risk_instant(self, quanta_concentration):
-        """Determine risk that a patient is infected"""
+        """Return the probability the person will become infections
+
+        Args:
+            quanta_concentration (number): Concetration of infectious material in the environment
+
+        Returns:
+            number: Probability that the person will become infected.
+        """
         return  1 - math.exp(-self.inhalation_rate* self.time_interval * quanta_concentration)
 
 

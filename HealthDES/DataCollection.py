@@ -20,6 +20,7 @@ class DataCollection:
     """
     # TODO: Implement some form of memory management to flush in-memory csv to disk/database if memory tight
 
+    # TODO: Update parameters at init to use param dictionary.
     def __init__(self, env, simulation_name=None, simulation_run=None):
         """ Create a class to collect data within a simulation run
         
@@ -112,7 +113,6 @@ class DataCollection:
             yield self.env.timeout(periods)
 
 
-
     def log_reporting(self, data_set_name, column_dictionary):
         """ Log data submitted by the simulation
 
@@ -175,16 +175,19 @@ class DataCollection:
 
         self.counters[data_set_name] -= amount
 
-    # TODO: Need some error check on data_Set_name to test if exists
     def get_results(self, data_set_name):
         """ Return stored data as a pandas data frame """
-        self.memory_file[data_set_name].seek(0)
-        df = pd.read_csv(self.memory_file[data_set_name])
+        file = self.memory_file.get(data_set_name, None)
+        df = None
+        if file != None:
+            file.seek(0)
+            df = pd.read_csv(file)
 
         return df
 
     def get_counter(self, data_set_name):
         """return value of a counter"""
+
         return self.counters.get(data_set_name, None)
 
     def get_list_of_reports(self):

@@ -12,6 +12,8 @@ dependencies:
   - ipywidgets
   - networkx
   - tqdm
+  - sphinx
   - pip:
     - simpy
-
+    - sphinx-autobuild
+    - sphinx_rtd_theme

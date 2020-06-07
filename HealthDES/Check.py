@@ -1,4 +1,4 @@
-
+""" HealthDES class to raise an exception when variables don't meet required conditions """
 
 class Check:
     """ Class containing functions to check whether values meet certain conditions
@@ -96,6 +96,7 @@ class CheckList:
 
     @staticmethod
     def fail_if_this_key_in_the_dictionary(test_key, di):
+        """ Fails if the key is not in the dictionary """
         if test_key in di:
             raise ValueError('Cannot have duplicate keys in dictionary')
 
