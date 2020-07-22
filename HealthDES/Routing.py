@@ -39,8 +39,8 @@ class Routing:
         """Register an activity with the activity registry
 
         Arguments:
-            activity_name {string} -- Name of the activity to register
-            activity_class {class ojb} -- Activity class, a child instance of this class
+            activity_name {str} -- Name of the activity to register
+            activity_class {class obj} -- Activity class, a child instance of this class
             arguments {dictionary} -- dictionary of arguments passed to the activity when called
         """
         self.activities[activity_name] = (activity_class, arguments)

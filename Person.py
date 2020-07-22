@@ -27,7 +27,7 @@ class Person(Person_base):
             starting_node_id (string): id for the starting node within the network graph.
             infection_status_label (disease_status, optional): Disease status of the person. Defaults to None.
             quanta_emission_rate (number, optional): Quanta emitted by the person per hour. Defaults to None.
-            inhalation_rate (number, optional): Respiritory rate of the person per hour. Defaults to None.
+            inhalation_rate (number, optional): Respiratory rate of the person per hour. Defaults to None.
             person_type (string, optional): Type of the person (visitor, staff, etc.). Defaults to None.
         """
 
@@ -81,7 +81,7 @@ class Person(Person_base):
         """Return the probability the person will become infections
 
         Args:
-            quanta_concentration (number): Concetration of infectious material in the environment
+            quanta_concentration (number): Concentration of infectious material in the environment
 
         Returns:
             number: Probability that the person will become infected.

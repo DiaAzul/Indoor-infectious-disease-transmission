@@ -43,7 +43,7 @@ class Person_base:
         # Routing is the list of environments that the person traverses
         self.routing_node_id = starting_node_id
 
-        # Person type is a characteristic which affects behabviour in the microenvironment
+        # Person type is a characteristic which affects behaviour in the microenvironment
         self.person_type = person_type
 
     def get_PID(self):
@@ -63,7 +63,7 @@ class Person_base:
             pops the microenvironment to visit and uses entry_callback function to return the entry point
             passes a reference to person instance (self)
             pops the arguments passed as keyword list and passes as new argument list to entry point parameters
-            initates a new simpy process for the persons activity within the microenvironment
+            initiates a new simpy process for the persons activity within the microenvironment
         """
         # For each microenvironment that the person visits
         while self.routing_node_id != 'end':
@@ -73,11 +73,11 @@ class Person_base:
             # Add this instance to the arguments list
             kwargs['person'] = self
 
-            # Create a parameterised instance of the activity
+            # Create a parametrised instance of the activity
             this_activity_class = activity_class(self.simulation_params, **kwargs)
             
             # set an event flag to mark end of activity and call the activity class
-            finished_activity = self.env.event()           
+            finished_activity = self.env.event()        
             self.env.process(this_activity_class.start(finished_activity))
             yield finished_activity
 

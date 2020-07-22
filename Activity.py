@@ -13,7 +13,7 @@ from Person import Person
 
 
 class Visitor_activity():
-    """Person's activity within the system, models interaction between poeple and environment """
+    """Person's activity within the system, models interaction between people and environment """
 
     def __init__(self, simulation_params, **kwargs):
         """Create a new activity
@@ -38,7 +38,7 @@ class Visitor_activity():
     """
 
     def unpack_parameters(self, **kwargs):
-        """Unpack the parameter list and store in local intance variables."""        
+        """Unpack the parameter list and store in local instance variables."""        
 
         self.person = kwargs['person']      
         self.microenvironment = kwargs['microenvironment']
@@ -54,7 +54,7 @@ class Visitor_activity():
             duration {number} -- Amount of time person spends in the environment
 
         Returns:
-            Typle(class, dictionary) -- This class and a dictionary of parameters required to instantiate an instance
+            Tuple(class, dictionary) -- This class and a dictionary of parameters required to instantiate an instance
         """
 
         parameters = {  'microenvironment':microenvironment,
@@ -156,7 +156,7 @@ class Visitor_activity():
         """Log visitor activity within the process visitor process 
         
             Arguments:
-            activity                  String describing the activity that has occured.
+            activity                  String describing the activity that has occurred.
         """
         # self.dc.log_reporting('Visitor activity', {'queue':self.queueing, 'visitors':self.visitors, 'activity': activity})
         self.dc.log_reporting('Visitor activity',

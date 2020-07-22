@@ -38,7 +38,7 @@ class Simulation:
 
         Keyword Arguments:
             simulation_name {string} -- The name for this simulation (default: {None})
-            simulation_run {string} -- The sequence number for this run of the simulatio (default: {None})
+            simulation_run {string} -- The sequence number for this run of the simulation (default: {None})
         """
         # Create a simpy environment
         self.env = simpy.Environment()

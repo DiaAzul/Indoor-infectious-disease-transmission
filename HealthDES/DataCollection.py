@@ -19,6 +19,7 @@ class DataCollection:
 
     """
     # TODO: Implement some form of memory management to flush in-memory csv to disk/database if memory tight
+    # TODO: Apache Arrow: Consider using, however, doesn't always support windows.
 
     # TODO: Update parameters at init to use param dictionary.
     def __init__(self, env, simulation_name=None, simulation_run=None):

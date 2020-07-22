@@ -9,7 +9,15 @@ class Check:
     """
     @staticmethod
     def is_equal_to_zero(x):
-        """ Check that variable is equal to zero."""
+        """Check that variable is equal to zero.
+
+        Args:
+            x (int or float): The variable to be tested.
+
+        Raises:
+            ValueError: The variable is not an int or float.
+            ValueError: The variable is not equal to zero.
+        """
         if not(type(x) is int or type(x) is float):
             raise ValueError('value must be a number')
         if not (x == 0):
@@ -17,15 +25,31 @@ class Check:
 
     @staticmethod
     def is_not_equal_to_zero(x):
-        """ Check that variable is not equal to zero."""
+        """Check that variable is not equal to zero.
+
+        Args:
+            x (int or float): The variable to be tested.
+
+        Raises:
+            ValueError: The variable is not an int or float.
+            ValueError: The variable is equal to zero.
+        """
         if not(type(x) is int or type(x) is float):
             raise ValueError('value must be a number')
         if not (x != 0):
-            raise ValueError('value must not equal to zero')
+            raise ValueError('value must not equal zero')
     
     @staticmethod
     def is_greater_than_zero(x):
-        """ Check that variable is greater than zero."""
+        """Check that variable is greater than zero.
+
+        Args:
+            x (int or float): The variable to be tested.
+
+        Raises:
+            ValueError: The variable is not an int or float.
+            ValueError: The variable is not greater than zero.
+        """
         if not(type(x) is int or type(x) is float):
             raise ValueError('value must be a number')
         if not (x > 0):
@@ -33,7 +57,15 @@ class Check:
 
     @staticmethod
     def is_greater_than_or_equal_to_zero(x):
-        """ Check that variable is greater than, or equal to, zero."""
+        """Check that variable is greater than or equal to zero.
+
+        Args:
+            x (int or float): The variable to be tested.
+
+        Raises:
+            ValueError: The variable is not an int or float.
+            ValueError: The variable is not greater than or equal to zero.
+        """
         if not(type(x) is int or type(x) is float):
             raise ValueError('value must be a number')
         if not (x >= 0):
@@ -41,7 +73,15 @@ class Check:
 
     @staticmethod
     def is_less_than_zero(x):
-        """ Check that variable is less than zero."""
+        """Check that variable is less than zero.
+
+        Args:
+            x (int or float): The variable to be tested.
+
+        Raises:
+            ValueError: The variable is not an int or float.
+            ValueError: The variable is not less than zero.
+        """
         if not(type(x) is int or type(x) is float):
             raise ValueError('value must be a number')
         if not (x < 0):
@@ -49,7 +89,15 @@ class Check:
 
     @staticmethod
     def is_less_than_or_equal_to_zero(x):
-        """ Check that variable is less than, or equal to, zero."""
+        """Check that variable is less than or equal to zero.
+
+        Args:
+            x (int or float): The variable to be tested.
+
+        Raises:
+            ValueError: The variable is not an int or float.
+            ValueError: The variable is not less than or equal to zero.
+        """
         if not(type(x) is int or type(x) is float):
             raise ValueError('value must be a number')
         if not (x <= 0):
@@ -60,19 +108,41 @@ class CheckList:
 
     @staticmethod
     def is_a_list(li):
-        """ Check whether variable is a list """
+        """Check whether the variable is a list
+
+        Args:
+            li (list): The variable to be tested.
+
+        Raises:
+            ValueError: The variable is not a list
+        """
         if not isinstance(li, list):
             raise ValueError('This must be a list')
     
     @staticmethod
     def fail_if_list_empty(li):
-        """ Check whether a list is empty """
+        """Check with a list is empy
+
+        Args:
+            li (list): The variable to be tested
+
+        Raises:
+            ValueError: The list is empty
+        """
         if not li:
             raise ValueError('list must have at least one entry')
 
     @staticmethod
     def fail_if_not_in_list(test_item, li):
-        """ fail if item is not in the list """
+        """Check with an item is in the list
+
+        Args:
+            test_item (obj): Item to be checked against the list
+            li (list): List potentially containing the item
+
+        Raises:
+            ValueError: The item is not in the list
+        """
         in_list = False
         for item in li:
             if item == test_item:
@@ -84,19 +154,41 @@ class CheckList:
 
     @staticmethod
     def is_a_dictionary(di):
-        """ Check whether variable is a list """
+        """Check whether item is a dictionaty
+
+        Args:
+            di (dict): The variable to be tested
+
+        Raises:
+            ValueError: The item is not a dictionary
+        """
         if not isinstance(di, dict):
             raise ValueError('This must be a dictionary')
 
     @staticmethod
     def fail_if_dict_empty(li):
-        """ Check whether a list is empty """
+        """Check whether a dictionary is empty
+
+        Args:
+            li (dict): The dictionary to be tested
+
+        Raises:
+            ValueError: The dictionary is not empy
+        """    
         if not li:
             raise ValueError('list must have at least one entry')
 
     @staticmethod
     def fail_if_this_key_in_the_dictionary(test_key, di):
-        """ Fails if the key is not in the dictionary """
+        """Fail if the given key is in the dictionary
+
+        Args:
+            test_key (obj): Key to test
+            di (dict): Dictionary that we want to test for presence of key
+
+        Raises:
+            ValueError: The key is in the dictionary
+        """   
         if test_key in di:
             raise ValueError('Cannot have duplicate keys in dictionary')
 
