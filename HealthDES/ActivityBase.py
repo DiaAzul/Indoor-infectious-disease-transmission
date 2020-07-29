@@ -101,7 +101,6 @@ class ActivityBase():
 
             print(f'AF:->{action} :-> {function_dict.get(action)}')
             print(f'TSZ:->{self.seize_resources}')
-            self.seize_resources()
 
             # TODO: Can't work out why this won't call the subclassed functions of overridden baseclass methods
             function_dict.get(action)()
@@ -117,6 +116,7 @@ class ActivityBase():
     def nop(self):
         pass
 
+    # TODO: Create an Abstract Base Class and see if we can get it to work
     def initialise(self):
         print('+Initialise(base)')
 
