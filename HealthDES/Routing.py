@@ -3,13 +3,23 @@
 import simpy
 import networkx as nx
 
+from dataclasses import dataclass
+from typing import Any, Dict
+
+@dataclass(frozen=True)
+class Activity_ID:
+    __slots__ = ['next_activity_id', 'activity_class', 'kwargs']
+    next_activity_id: str
+    activity_class: Any
+    kwargs: Dict[str, Any]
+
 
 class Routing:
-    """Create a routing graph and than route people throug the system
+    """Create a routing graph and than route people through the system
 
     The system is represented as a graph. Each node represents a decision point and each
     edge represents an activity. People are routed through the system making decisions at
-    each decision point as to which activity to do next. Activities specifiy how environments,
+    each decision point as to which activity to do next. Activities specify how environments,
     resources and people come together over a period of time.
     """
 
@@ -20,10 +30,10 @@ class Routing:
         Nodes:      Nodes are decision points within the routing network and determine which
                     activity a person will perform next. Nodes have a unique identifier and a 
                     routing function to determine the next activity. 
-        Edges:      Edges are directed and represent activities wthin the system. An edge can
+        Edges:      Edges are directed and represent activities within the system. An edge can
                     start and end on the same node (holding pattern). There is only one edge
                     between adjacent nodes. The edge has a unique activity function which is
-                    called to pull together environments, reources and people.
+                    called to pull together environments, resources and people.
         """
 
         # G is a MultiDiGraph - a directed graph with multiple edges between the same nodes.
@@ -84,11 +94,8 @@ class Routing:
         return edge_id
 
 
-    def get_next_activity(self, node_id):
+    def get_activity(self, node_id):
         """Determine the next activity, return both the activity and next node ID"""
-
-        # Default no return values
-        _, next_id, activity_id = (None, None, None)
 
         # TODO: This assumes we only have one possible edge from Node, the code will need to be developed
         # to include routing logic.
@@ -97,8 +104,11 @@ class Routing:
             for items in self.G.out_edges(node_id, keys=True):
                 _,  next_id, activity_id =  items
             activity_class, arguments = self.activities[activity_id]
+            activity = Activity_ID(next_id, activity_class, arguments)
+        else:
+            activity = Activity_ID(None, None, None)
 
-        return next_id, activity_class, arguments
+        return activity
 
 
 

@@ -3,18 +3,20 @@
 import simpy
 import math
 import itertools
+import yaml
 
 from HealthDES.Check import Check, CheckList
 from HealthDES.DataCollection import DataCollection
+from HealthDES.ActivityBase import ActivityBase
 
 from DiseaseProgression import DiseaseProgression
 from Microenvironment import Microenvironment
 from Person import Person
 
-
-class Visitor_activity():
+class Visitor_activity(ActivityBase):
     """Person's activity within the system, models interaction between people and environment """
 
+ 
     def __init__(self, simulation_params, **kwargs):
         """Create a new activity
 
@@ -22,10 +24,8 @@ class Visitor_activity():
             simulation_params {dictionary} -- keyword arguments for the simulation
             kwargs {dictionary} -- Keyword arguments for the activity
         """
-        self.env = simulation_params.get('simpy_env', None)
-        self.dc = simulation_params.get('data_collector', None)
-        self.time_interval = simulation_params.get('time_interval', None)
-
+        ActivityBase.__init__(self, simulation_params, **kwargs)
+ 
         self.unpack_parameters(**kwargs)
 
 
@@ -38,9 +38,7 @@ class Visitor_activity():
     """
 
     def unpack_parameters(self, **kwargs):
-        """Unpack the parameter list and store in local instance variables."""        
-
-        self.person = kwargs['person']      
+        """Unpack the parameter list and store in local instance variables."""  
         self.microenvironment = kwargs['microenvironment']
         self.duration = kwargs['duration']
 
@@ -64,41 +62,35 @@ class Visitor_activity():
         return cls, parameters
 
 
-    # Entry point to the activity
-    def start(self, finished_activity):
-        """Introduce a person to the microenvironment
+    def seize_resources(self):
+        print('+seize_resources(subclass)')
+        self.request_entry = self.microenvironment.request_entry()
+        yield self.request_entry
 
-            Arguments:
-            finished_activity    Event notification that activity has completed
-            duration             Length of time that infected person remains in the microenvironment
-        """
-        # Request entry into the microenvironment
-        with self.microenvironment.request_entry() as request_entry:
-            self.log_visitor_activity("Visitor {PID} requests entry.".format(PID=self.person.PID))         
-            yield request_entry
 
-            # Wait in the shop
-            self.log_visitor_activity("Visitor {PID} entered.".format(PID=self.person.PID))
-            self.dc.counter_increment('Total visitors')
+    def execute(self):
+        # Wait in the shop
+        self.log_visitor_activity("Visitor {PID} entered.".format(PID=self.person.PID))
+        self.dc.counter_increment('Total visitors')
 
-            person_request_to_leave = self.env.event()
+        person_request_to_leave = self.env.event()
 
-            if self.person.infection_status.is_state('infected'):
-                self.env.process(self.infected_visitor(self.microenvironment.add_quanta_to_microenvironment,
-                                                         person_request_to_leave,
-                                                         self.duration))
-                yield person_request_to_leave
+        if self.person.infection_status.is_state('infected'):
+            self.env.process(self.infected_visitor(self.microenvironment.add_quanta_to_microenvironment,
+                                                        person_request_to_leave,
+                                                        self.duration))
+            yield person_request_to_leave
 
-            elif self.person.infection_status.is_state('susceptible'):
-                
-                self.env.process(self.susceptible_visitor(self.microenvironment.get_quanta_concentration,
-                                                            person_request_to_leave,
-                                                            self.duration))
-                yield person_request_to_leave
+        elif self.person.infection_status.is_state('susceptible'):
+            
+            self.env.process(self.susceptible_visitor(self.microenvironment.get_quanta_concentration,
+                                                        person_request_to_leave,
+                                                        self.duration))
+            yield person_request_to_leave
 
-            self.log_visitor_activity("Visitor {PID} left.".format(PID=self.person.PID))
+        self.log_visitor_activity("Visitor {PID} left.".format(PID=self.person.PID))
 
-            finished_activity.succeed()
+        self.message_to_person.put('end')        
 
 
     def infected_visitor(self, callback_add_quanta, request_to_leave, periods):

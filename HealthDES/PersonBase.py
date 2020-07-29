@@ -3,11 +3,11 @@
 import simpy
 import math
 import itertools
+import yaml
 
 # pylint: disable=relative-beyond-top-level
 from .Check import Check, CheckList
-from .Routing import Routing
-
+from .Routing import Routing, Activity_ID
 
 class Person_base: 
     """ Class to implement a person as a simpy discreate event simulation
@@ -20,6 +20,76 @@ class Person_base:
 
     # create a unique ID counter
     get_new_id = itertools.count()
+
+    # Load the state diagram for the finite state machine
+    state_diagram = yaml.load("""
+    init:
+      initialise_a:
+        action: run_a
+        message_to_a: initialise
+        message_to_b: NOP
+        next_state: initialised_a                
+    initialised_a:
+      initialised_a:
+        action: NOP
+        message_to_a: seize_resources
+        message_to_b: NOP
+        next_state: resources_seized_a
+    resources_seized_a:
+      resources_seized_a: 
+        action: NOP
+        message_to_a: start
+        message_to_b: NOP
+        next_state: started_a  
+    started_a:
+      completed_a:
+        action: get_next_node
+        message_to_a: NOP
+        message_to_b: NOP
+        next_state: branch_if_end              
+    branch_if_end:
+      initialise_b:
+        action: run_b
+        message_to_a: NOP
+        message_to_b: initialise
+        next_state: initialised_b
+      branch_to_end:
+        action: NOP
+        message_to_a: NOP
+        message_to_b: NOP
+        next_state: end_graph_release_a         
+    initialised_b:
+      initialised_b:
+        action: NOP
+        message_to_a: NOP
+        message_to_b: seize_resources
+        next_state: resources_seized_b
+    resources_seized_b:
+      resources_seized_b:
+        action: NOP
+        message_to_a: release_resources
+        message_to_b: NOP
+        next_state: resources_released_a
+    resources_released_a:
+      resources_released:
+        action: NOP
+        message_to_a: end
+        message_to_b: NOP
+        next_state: stop_a_transfer_to_b
+    stop_a_transfer_to_b:
+      ended_a:
+        action: b_to_a
+        message_to_a: NOP
+        message_to_b: start
+        next_state: started_a
+    end_graph_release_a:
+      branch_to_end:
+        action: NOP
+        message_to_a: end
+        message_to_b: NOP
+        next_state: end
+    """, Loader=yaml.SafeLoader)
+
 
     def __init__(self, simulation_params, starting_node_id, person_type=None):
         """Establish the persons characteristics, this will be specific to each model
@@ -41,7 +111,7 @@ class Person_base:
         self.PID = next(Person_base.get_new_id)
 
         # Routing is the list of environments that the person traverses
-        self.routing_node_id = starting_node_id
+        self.starting_node_id = starting_node_id
 
         # Person type is a characteristic which affects behaviour in the microenvironment
         self.person_type = person_type
@@ -65,19 +135,98 @@ class Person_base:
             pops the arguments passed as keyword list and passes as new argument list to entry point parameters
             initiates a new simpy process for the persons activity within the microenvironment
         """
+
+        # How can we set prioritisation of patients so that they can queue jump?
+        # How do we handle reneging and re-routing (return message could achieve this at resource_seized)
+        function_dict = {
+            'NOP': self.nop,
+            'get_next_node': self.get_next_node,
+            'run_a': self.run_a,
+            'run_b': self.run_b,
+            'b_to_a': self.transfer_b_to_a
+        }
+
+        state = 'init'
+        received_message = 'initialise_a'
+        activity_a = self.get_activity(self.starting_node_id)
+        activity_b = None
+
         # For each microenvironment that the person visits
-        while self.routing_node_id != 'end':
-            # Get the next node, and this activity class and arguments.
-            self.routing_node_id, activity_class, kwargs = self.routing.get_next_activity(self.routing_node_id)
+        finished = False
+        while not finished:
 
-            # Add this instance to the arguments list
-            kwargs['person'] = self
+            state_dict = Person_base.state_diagram.get(state, 'No State')
+            if state_dict == 'No state':
+                raise ValueError(f'Person state error:s->{state}:m->{received_message}')
 
-            # Create a parametrised instance of the activity
-            this_activity_class = activity_class(self.simulation_params, **kwargs)
-            
-            # set an event flag to mark end of activity and call the activity class
-            finished_activity = self.env.event()        
-            self.env.process(this_activity_class.start(finished_activity))
-            yield finished_activity
+            actions = state_dict.get(received_message, 'No message')
+            if actions == 'No message':
+                raise ValueError(f'Person received message error:s->{state}:m->{received_message}')
 
+            action = actions.get('action', 'NOP')
+            message_to_a = actions.get('message_to_a', 'NOP')
+            message_to_b = actions.get('message_to_b',' NOP')
+            state = actions.get('next_state', None)
+            if not state:
+                raise ValueError('Person next state invalid')
+
+            # execute action
+            activity_a, activity_b, received_message = function_dict.get(action)(activity_a, activity_b, received_message)
+
+            # execute activities
+            if message_to_a != 'NOP':
+                activity_a.kwargs['message_to_activity'].put(message_to_a)
+                received_message = yield activity_a.kwargs['message_to_person'].get()
+                received_message += '_a'
+
+            elif message_to_b != 'NOP':
+                activity_b.kwargs['message_to_activity'].put(message_to_b)
+                received_message = yield activity_b.kwargs['message_to_person'].get()
+                received_message += '_b'               
+
+            finished = True if state == 'end' else finished
+
+
+    def nop(self, a, b, received_message):
+        """Function which does nothing
+        """      
+        return (a, b, received_message)
+
+    def get_next_node(self, a, b, received_message):
+        if a.next_activity_id != 'end':
+            b = self.get_activity(a.next_activity_id)
+            received_message = 'initialise_b'
+        else:
+            b = None
+            received_message = 'branch_to_end'
+        return (a, b, received_message)
+
+    def run_a(self, a, b, received_message):
+        if a is not None:
+          self.run_activity(a)
+        return (a, b, received_message)
+
+    def run_b(self, a, b, received_message):
+        if b is not None:
+            self.run_activity(b)
+        return (a, b, received_message)
+
+    def transfer_b_to_a(self, a, b, received_message):
+        a, b = b, None
+        return (a, b, received_message)
+
+    def run_activity(self, activity):
+        activity_class = activity.activity_class(self.simulation_params, **activity.kwargs)
+        self.env.process(activity_class.run())
+
+    def get_activity(self, routing_id):
+        activity = self.routing.get_activity(routing_id)
+
+        # Add this instance to the arguments list
+        activity.kwargs['person'] = self
+
+        # Create two communication pipes for bi-directional communication with activity
+        activity.kwargs['message_to_activity'] = simpy.Store(self.env)
+        activity.kwargs['message_to_person'] = simpy.Store(self.env)
+
+        return activity

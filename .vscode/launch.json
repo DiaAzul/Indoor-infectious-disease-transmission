@@ -10,6 +10,13 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Run.py",
+            "type": "python",
+            "request": "launch",
+            "program": "./run.py",
+            "console": "integratedTerminal"
         }
     ]
 }
