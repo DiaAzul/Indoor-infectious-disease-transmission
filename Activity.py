@@ -24,7 +24,8 @@ class Visitor_activity(ActivityBase):
             simulation_params {dictionary} -- keyword arguments for the simulation
             kwargs {dictionary} -- Keyword arguments for the activity
         """
-        ActivityBase.__init__(self, simulation_params, **kwargs)
+        # Initialise the base class
+        super().__init__(simulation_params, **kwargs)
  
         self.unpack_parameters(**kwargs)
 

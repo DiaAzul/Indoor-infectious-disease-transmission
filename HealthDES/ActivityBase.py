@@ -56,6 +56,7 @@ class ActivityBase():
         self.dc = simulation_params.get('data_collector', None)
         self.time_interval = simulation_params.get('time_interval', None)
 
+        # TODO: Should we make these keyword arguments more explicit for the base class?
         self.person = kwargs['person']      
         self.message_to_activity = kwargs['message_to_activity']
         self.message_to_person = kwargs['message_to_person']        

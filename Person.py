@@ -30,9 +30,9 @@ class Person(PersonBase):
             inhalation_rate (number, optional): Respiratory rate of the person per hour. Defaults to None.
             person_type (string, optional): Type of the person (visitor, staff, etc.). Defaults to None.
         """
+        # Initialise the base class
+        super().__init__(simulation_params, starting_node_id, person_type)
 
-        PersonBase.__init__(self, simulation_params, starting_node_id, person_type)
-        
         # Characteristics
         self.infection_status = DiseaseProgression(infection_status_label)
         self.quanta_emission_rate = quanta_emission_rate if quanta_emission_rate else 147
