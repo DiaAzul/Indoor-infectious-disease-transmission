@@ -2,7 +2,7 @@
 
 import simpy
 import yaml
-
+import inspect
 
 class ActivityBase():
     """Person's activity within the system, models interaction between people and environment """
@@ -66,7 +66,6 @@ class ActivityBase():
 
         The event loop dispatches events in response to communication from the person class
         """
-
         function_dict = {
             'initialise': self.initialise,
             'seize_resources_and_execute': self.seize_resources_and_execute,            
@@ -82,10 +81,8 @@ class ActivityBase():
         finished = False
         while not finished:
             # set an event flag to mark end of activity and call the activity class
-
             received_message = yield self.message_to_activity.get()
 
-            print(f"RA:->{state}->{received_message}")
             actions = ActivityBase.state_diagram.get(state, 'No State').get(received_message, 'No message')
             if actions == 'No state':
                 raise ValueError('Activity state error')
@@ -99,15 +96,15 @@ class ActivityBase():
             if not function_dict.get(action, None):
                 raise ValueError(f'Activity function {action} missing')
 
-            print(f'AF:->{action} :-> {function_dict.get(action)}')
-            print(f'TSZ:->{self.seize_resources}')
-
-            # TODO: Can't work out why this won't call the subclassed functions of overridden baseclass methods
-            function_dict.get(action)()
+            # Check whether subclassed method is a generator, which requires different calling pattern
+            if inspect.isgeneratorfunction(function_dict.get(action)):
+                for result in function_dict.get(action)():
+                    pass
+            else:
+                function_dict.get(action)()
             
             state = next_state
 
-            print(f'MA2P:->{success_message}')
             self.message_to_person.put(success_message)
 
             finished = True if state == 'ended' else finished
@@ -116,30 +113,25 @@ class ActivityBase():
     def nop(self):
         pass
 
-    # TODO: Create an Abstract Base Class and see if we can get it to work
     def initialise(self):
-        print('+Initialise(base)')
+        pass
 
     def seize_resources_and_execute(self):
         self.seize_resources()
         self.execute()
 
     def seize_resources(self):
-        print('seize_resources(base)')
-        
+        pass
 
     def execute(self):
-        print('execute(base)')
-        
+        pass
 
     def release_resources_and_end(self):
         self.release_resources()
         self.end()
 
     def release_resources(self):
-        print('+Release_resources(base)')
         pass
 
     def end(self):
-        print('+End(base)')
         pass

@@ -177,12 +177,15 @@ class Person_base:
             if message_to_a != 'NOP':
                 activity_a.kwargs['message_to_activity'].put(message_to_a)
                 received_message = yield activity_a.kwargs['message_to_person'].get()
+                # print(f'RM_A:->{received_message}')
                 received_message += '_a'
 
             elif message_to_b != 'NOP':
                 activity_b.kwargs['message_to_activity'].put(message_to_b)
                 received_message = yield activity_b.kwargs['message_to_person'].get()
-                received_message += '_b'               
+                received_message += '_b'    
+
+            # print(f'RMP:->{received_message}')           
 
             finished = True if state == 'end' else finished
 

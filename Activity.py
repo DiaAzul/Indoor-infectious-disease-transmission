@@ -63,7 +63,6 @@ class Visitor_activity(ActivityBase):
 
 
     def seize_resources(self):
-        print('+seize_resources(subclass)')
         self.request_entry = self.microenvironment.request_entry()
         yield self.request_entry
 
@@ -89,8 +88,6 @@ class Visitor_activity(ActivityBase):
             yield person_request_to_leave
 
         self.log_visitor_activity("Visitor {PID} left.".format(PID=self.person.PID))
-
-        self.message_to_person.put('end')        
 
 
     def infected_visitor(self, callback_add_quanta, request_to_leave, periods):
