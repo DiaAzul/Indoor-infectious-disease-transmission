@@ -5,10 +5,10 @@ import math
 import time
 
 # Import local libraries
-from HealthDES.Check import Check
-from HealthDES.DataCollection import DataCollection
-from HealthDES.Routing import Routing
-from HealthDES.Check import Check, CheckList
+from HealthDES import Check
+from HealthDES import DataCollection
+from HealthDES import Routing
+from HealthDES import Check, CheckList
 
 from Microenvironment import Microenvironment
 from Person import Person

@@ -5,9 +5,9 @@ import math
 import itertools
 import yaml
 
-from HealthDES.Check import Check, CheckList
-from HealthDES.DataCollection import DataCollection
-from HealthDES.ActivityBase import ActivityBase
+from HealthDES import Check, CheckList
+from HealthDES import DataCollection
+from HealthDES import ActivityBase
 
 from DiseaseProgression import DiseaseProgression
 from Microenvironment import Microenvironment

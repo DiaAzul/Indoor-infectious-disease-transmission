@@ -9,7 +9,7 @@ import yaml
 from .Check import Check, CheckList
 from .Routing import Routing, Activity_ID
 
-class Person_base: 
+class PersonBase: 
     """ Class to implement a person as a simpy discreate event simulation
     
         The person will have various characteristics which influences the simulation
@@ -108,7 +108,7 @@ class Person_base:
         self.time_interval = simulation_params.get('time_interval', None)
 
         # keep a record of person IDs
-        self.PID = next(Person_base.get_new_id)
+        self.PID = next(PersonBase.get_new_id)
 
         # Routing is the list of environments that the person traverses
         self.starting_node_id = starting_node_id
@@ -155,7 +155,7 @@ class Person_base:
         finished = False
         while not finished:
 
-            state_dict = Person_base.state_diagram.get(state, 'No State')
+            state_dict = PersonBase.state_diagram.get(state, 'No State')
             if state_dict == 'No state':
                 raise ValueError(f'Person state error:s->{state}:m->{received_message}')
 

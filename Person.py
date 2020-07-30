@@ -5,12 +5,12 @@ import math
 import random
 import itertools
 
-from HealthDES.DataCollection import DataCollection
-from HealthDES.PersonBase import Person_base
+from HealthDES import DataCollection
+from HealthDES import PersonBase
 
 from DiseaseProgression import DiseaseProgression
 
-class Person(Person_base):
+class Person(PersonBase):
     """ Class to implement a person as a simpy discreate event simulation
     
         The person will have various characteristics which influences the simulation
@@ -31,7 +31,7 @@ class Person(Person_base):
             person_type (string, optional): Type of the person (visitor, staff, etc.). Defaults to None.
         """
 
-        Person_base.__init__(self, simulation_params, starting_node_id, person_type)
+        PersonBase.__init__(self, simulation_params, starting_node_id, person_type)
         
         # Characteristics
         self.infection_status = DiseaseProgression(infection_status_label)
