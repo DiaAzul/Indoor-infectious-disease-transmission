@@ -1,8 +1,8 @@
 """ Python library to model the spread of infectious diseases within a microenvironment """
 
-import simpy
 import yaml
 import inspect
+
 
 class ActivityBase():
     """Person's activity within the system, models interaction between people and environment """
@@ -24,26 +24,25 @@ class ActivityBase():
         function: seize_resources_and_run
         success_message: completed
     resources_seized:
-      start: 
+      start:
         next_state: completed
         function: execute
         success_message: completed
     completed:
-      release_resources: 
+      release_resources:
         next_state: stopped
         function: release_resources
-        success_message: resources_released          
-      end: 
+        success_message: resources_released
+      end:
         next_state: ended
         function: release_resources_and_end
-        success_message: ended               
+        success_message: ended
     stopped:
       end:
         next_state: ended
         function: end
         success_message: ended
     """, Loader=yaml.SafeLoader)
-
 
     def __init__(self, simulation_params, **kwargs):
         """Create a new activity
@@ -57,10 +56,9 @@ class ActivityBase():
         self.time_interval = simulation_params.get('time_interval', None)
 
         # TODO: Should we make these keyword arguments more explicit for the base class?
-        self.person = kwargs['person']      
+        self.person = kwargs['person']
         self.message_to_activity = kwargs['message_to_activity']
-        self.message_to_person = kwargs['message_to_person']        
-
+        self.message_to_person = kwargs['message_to_person']
 
     def run(self):
         """Run the event loop for the activity
@@ -69,10 +67,10 @@ class ActivityBase():
         """
         function_dict = {
             'initialise': self.initialise,
-            'seize_resources_and_execute': self.seize_resources_and_execute,            
+            'seize_resources_and_execute': self.seize_resources_and_execute,
             'seize_resources': self.seize_resources,
             'execute': self.execute,
-            'release_resources_and_end': self.release_resources_and_end,            
+            'release_resources_and_end': self.release_resources_and_end,
             'release_resources': self.release_resources,
             'end': self.end
         }
@@ -84,7 +82,8 @@ class ActivityBase():
             # set an event flag to mark end of activity and call the activity class
             received_message = yield self.message_to_activity.get()
 
-            actions = ActivityBase.state_diagram.get(state, 'No State').get(received_message, 'No message')
+            actions = ActivityBase.state_diagram.get(state, 'No State') \
+                                                .get(received_message, 'No message')
             if actions == 'No state':
                 raise ValueError('Activity state error')
             if actions == 'No message':
@@ -97,19 +96,19 @@ class ActivityBase():
             if not function_dict.get(action, None):
                 raise ValueError(f'Activity function {action} missing')
 
-            # Check whether subclassed method is a generator, which requires different calling pattern
+            # Check whether subclassed method is a generator, which requires different
+            # calling pattern
             if inspect.isgeneratorfunction(function_dict.get(action)):
                 for result in function_dict.get(action)():
                     pass
             else:
                 function_dict.get(action)()
-            
+
             state = next_state
 
             self.message_to_person.put(success_message)
 
             finished = True if state == 'ended' else finished
-
 
     def nop(self):
         pass

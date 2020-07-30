@@ -1,17 +1,13 @@
 """ Python library to model the spread of infectious diseases within a microenvironment """
 
 import simpy
-import math
 import itertools
 import yaml
 
-# pylint: disable=relative-beyond-top-level
-from .Check import Check, CheckList
-from .Routing import Routing, Activity_ID
 
-class PersonBase: 
+class PersonBase:
     """ Class to implement a person as a simpy discreate event simulation
-    
+
         The person will have various characteristics which influences the simulation
 
         The person will have a flow around the simulation implemented as a list of activities
@@ -28,7 +24,7 @@ class PersonBase:
         action: run_a
         message_to_a: initialise
         message_to_b: NOP
-        next_state: initialised_a                
+        next_state: initialised_a
     initialised_a:
       initialised_a:
         action: NOP
@@ -36,17 +32,17 @@ class PersonBase:
         message_to_b: NOP
         next_state: resources_seized_a
     resources_seized_a:
-      resources_seized_a: 
+      resources_seized_a:
         action: NOP
         message_to_a: start
         message_to_b: NOP
-        next_state: started_a  
+        next_state: started_a
     started_a:
       completed_a:
         action: get_next_node
         message_to_a: NOP
         message_to_b: NOP
-        next_state: branch_if_end              
+        next_state: branch_if_end
     branch_if_end:
       initialise_b:
         action: run_b
@@ -57,7 +53,7 @@ class PersonBase:
         action: NOP
         message_to_a: NOP
         message_to_b: NOP
-        next_state: end_graph_release_a         
+        next_state: end_graph_release_a
     initialised_b:
       initialised_b:
         action: NOP
@@ -90,21 +86,22 @@ class PersonBase:
         next_state: end
     """, Loader=yaml.SafeLoader)
 
-
     def __init__(self, simulation_params, starting_node_id, person_type=None):
         """Establish the persons characteristics, this will be specific to each model
 
         Arguments:
-            simulation_params {Obj} -- Dictionary of parameters for the simulation (see simulation.py)
+            simulation_params {Obj} -- Dictionary of parameters for the simulation
+                                       (see simulation.py)
 
         Keyword Arguments:
-            person_type {string} -- Type of person within the model e.g visitor, staff (default: {None})
+            person_type {string} -- Type of person within the model e.g visitor, staff
+                                    (default: {None})
         """
         # import simulation parameters
         self.simulation_params = simulation_params
         self.env = simulation_params.get('simpy_env', None)
         self.dc = simulation_params.get('data_collector', None)
-        self.routing = simulation_params.get('routing', None)       
+        self.routing = simulation_params.get('routing', None)
         self.time_interval = simulation_params.get('time_interval', None)
 
         # keep a record of person IDs
@@ -124,20 +121,20 @@ class PersonBase:
         """
         return self.PID
 
-
     def run(self):
         """ Simulation process for the person
-        
+
             Tests that the routing list still has destinations to visit
 
-            pops the microenvironment to visit and uses entry_callback function to return the entry point
-            passes a reference to person instance (self)
-            pops the arguments passed as keyword list and passes as new argument list to entry point parameters
-            initiates a new simpy process for the persons activity within the microenvironment
+            pops the microenvironment to visit and uses entry_callback function to return the entry
+            point passes a reference to person instance (self); pops the arguments passed as keyword
+            list; and, passes as new argument list to entry point parameters; initiates a new simpy
+            process for the persons activity within the microenvironment
         """
 
         # How can we set prioritisation of patients so that they can queue jump?
-        # How do we handle reneging and re-routing (return message could achieve this at resource_seized)
+        # How do we handle reneging and re-routing (return message could achieve this at
+        # resource_seized)
         function_dict = {
             'NOP': self.nop,
             'get_next_node': self.get_next_node,
@@ -165,13 +162,15 @@ class PersonBase:
 
             action = actions.get('action', 'NOP')
             message_to_a = actions.get('message_to_a', 'NOP')
-            message_to_b = actions.get('message_to_b',' NOP')
+            message_to_b = actions.get('message_to_b', 'NOP')
             state = actions.get('next_state', None)
             if not state:
                 raise ValueError('Person next state invalid')
 
             # execute action
-            activity_a, activity_b, received_message = function_dict.get(action)(activity_a, activity_b, received_message)
+            activity_a, activity_b, received_message = function_dict.get(action)(activity_a,
+                                                                                 activity_b,
+                                                                                 received_message)
 
             # execute activities
             if message_to_a != 'NOP':
@@ -183,16 +182,15 @@ class PersonBase:
             elif message_to_b != 'NOP':
                 activity_b.kwargs['message_to_activity'].put(message_to_b)
                 received_message = yield activity_b.kwargs['message_to_person'].get()
-                received_message += '_b'    
+                received_message += '_b'
 
-            # print(f'RMP:->{received_message}')           
+            # print(f'RMP:->{received_message}')
 
             finished = True if state == 'end' else finished
 
-
     def nop(self, a, b, received_message):
         """Function which does nothing
-        """      
+        """
         return (a, b, received_message)
 
     def get_next_node(self, a, b, received_message):
@@ -206,7 +204,7 @@ class PersonBase:
 
     def run_a(self, a, b, received_message):
         if a is not None:
-          self.run_activity(a)
+            self.run_activity(a)
         return (a, b, received_message)
 
     def run_b(self, a, b, received_message):

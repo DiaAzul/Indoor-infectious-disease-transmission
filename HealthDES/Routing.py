@@ -1,10 +1,10 @@
 """ Python library to model the spread of infectious diseases within a microenvironment """
 
-import simpy
 import networkx as nx
 
 from dataclasses import dataclass
 from typing import Any, Dict
+
 
 @dataclass(frozen=True)
 class Activity_ID:
@@ -28,8 +28,8 @@ class Routing:
 
         The routing graph consists of:
         Nodes:      Nodes are decision points within the routing network and determine which
-                    activity a person will perform next. Nodes have a unique identifier and a 
-                    routing function to determine the next activity. 
+                    activity a person will perform next. Nodes have a unique identifier and a
+                    routing function to determine the next activity.
         Edges:      Edges are directed and represent activities within the system. An edge can
                     start and end on the same node (holding pattern). There is only one edge
                     between adjacent nodes. The edge has a unique activity function which is
@@ -42,9 +42,7 @@ class Routing:
         # Dictionary of activities and reference to implementation classes
         self.activities = {}
 
-
     # Methods to interact with the activity dictionary
-
     def register_activity(self, activity_name, activity_class, arguments):
         """Register an activity with the activity registry
 
@@ -55,15 +53,13 @@ class Routing:
         """
         self.activities[activity_name] = (activity_class, arguments)
 
-
     def get_activities(self):
         """Get the list of registered activities
 
         Returns:
             Dictionary -- Dictionary of registered activities.
-        """        
+        """
         return self.activities
-
 
     def get_activity_details(self, activity_name):
         """Return a tuple containing the activity class and arguments
@@ -76,10 +72,8 @@ class Routing:
         """
         return self.activities[activity_name]
 
-
     # Methods to interact with the routing graph
     # TODO: Switch nodes and edges around - Node is the activity, edges are the transitions between activities (better for display)
-
     def add_decision(self, name):
         """Create a decision point in the graph with decision function"""
 
@@ -93,7 +87,6 @@ class Routing:
 
         return edge_id
 
-
     def get_activity(self, node_id):
         """Determine the next activity, return both the activity and next node ID"""
 
@@ -102,16 +95,10 @@ class Routing:
         if node_id:
             # For each of the available edges
             for items in self.G.out_edges(node_id, keys=True):
-                _,  next_id, activity_id =  items
+                _,  next_id, activity_id = items
             activity_class, arguments = self.activities[activity_id]
             activity = Activity_ID(next_id, activity_class, arguments)
         else:
             activity = Activity_ID(None, None, None)
 
         return activity
-
-
-
-
-
-          

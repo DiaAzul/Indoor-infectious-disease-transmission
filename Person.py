@@ -1,18 +1,16 @@
 """ Python library to model the spread of infectious diseases within a microenvironment """
 
-import simpy
 import math
 import random
-import itertools
 
-from HealthDES import DataCollection
 from HealthDES import PersonBase
 
 from DiseaseProgression import DiseaseProgression
 
+
 class Person(PersonBase):
     """ Class to implement a person as a simpy discreate event simulation
-    
+
         The person will have various characteristics which influences the simulation
 
         The person will have a flow around the simulation implemented as a list of activities
@@ -41,15 +39,13 @@ class Person(PersonBase):
         self.cumulative_exposure = 0
         self.infected = False
 
-
     def get_quanta_emission_rate(self):
         """Get the parsons quanta emmission rate
 
         Returns:
             Number -- Quanta emission rate
-        """        
+        """
         return self.quanta_emission_rate
-
 
     def expose_person_to_quanta(self, quanta_concentration):
         """Calculate the amount of quanta the person is exposed to
@@ -66,15 +62,13 @@ class Person(PersonBase):
             if self.infection_status.is_state('susceptible'):
                 self.log_infection()
                 self.dc.counter_increment('Infections')
-     
-            self.infection_status.set_state('exposed')
 
+            self.infection_status.set_state('exposed')
 
     # TODO: Check whether this can be removed
     def infection_risk(self):
         """Determine risk that a patient is infected"""
-        return  1 - math.exp(-self.inhalation_rate* self.time_interval * self.cumulative_exposure)
-
+        return 1 - math.exp(-self.inhalation_rate * self.time_interval * self.cumulative_exposure)
 
     # TODO: Move this inside expose person to quanta (simplify)
     def infection_risk_instant(self, quanta_concentration):
@@ -86,18 +80,15 @@ class Person(PersonBase):
         Returns:
             number: Probability that the person will become infected.
         """
-        return  1 - math.exp(-self.inhalation_rate* self.time_interval * quanta_concentration)
-
+        return 1 - math.exp(-self.inhalation_rate * self.time_interval * quanta_concentration)
 
     def log_infection_risk(self):
         """Log visitors infection risk"""
         self.dc.log_reporting('Infection risk',
-                             {'Person':self.PID,
-                               'Infection risk': self.infection_risk()})    
+                              {'Person': self.PID,
+                               'Infection risk': self.infection_risk()})
 
-    
     def log_infection(self):
         """Log visitor activity within the process visitor process"""
         self.dc.log_reporting('Infections',
-                             {'Person':self.PID})
-        
+                              {'Person': self.PID})
