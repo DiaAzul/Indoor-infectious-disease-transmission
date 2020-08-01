@@ -3,9 +3,8 @@
 import simpy
 import math
 
-from HealthDES.Check import Check
-from HealthDES.DataCollection import DataCollection
-from DiseaseProgression import DiseaseProgression
+from HealthDES import Check
+
 
 class Microenvironment:
     """ Class to implement a microenvironment as a simpy discreate event simulation """
@@ -56,9 +55,7 @@ class Microenvironment:
         # Set up periodic reporting
         self.initialise_periodic_reporting()
 
-
     # Start the microenvironment, usually when simulation established
-
     def run(self):
         """ Calculate the new quanta concentration in the building """
         while True:
@@ -66,16 +63,16 @@ class Microenvironment:
             # Reduce quanta concentration over time
             self.quanta_in_microenvironment *= math.exp(-self.air_exchange_rate * self.time_interval)
 
-            yield self.env.timeout(1)  
+            yield self.env.timeout(1)
 
-    # Allow visitors to request entry  
-  
+    # Allow visitors to request entry
+
     def request_entry(self):
         """Request entery into the microenvironment
 
         Returns:
             simpy resource  -- Simpy resource (with potential capacity constraint)
-        """        
+        """
         return self.microenvironment.request()
 
     def get_queue_length(self):
@@ -84,7 +81,7 @@ class Microenvironment:
         Returns:
             {integer} -- Number of people waiting in the queue
 
-        """        
+        """
         return len(self.microenvironment.queue)
 
     def get_active_users(self):
@@ -99,21 +96,18 @@ class Microenvironment:
 
     def add_quanta_to_microenvironment(self, quanta):
         """ Callback from person class to add quanta to the microenvironment
-        
+
             Arguments:
             quanta              The number of quanta to add to the microenvironment
         """
         Check.is_greater_than_or_equal_to_zero(quanta)
         self.quanta_in_microenvironment += quanta
 
-
     def get_quanta_concentration(self):
         """ Callback from person class to get the quanta concentration """
         return self.quanta_in_microenvironment / self.volume
 
-
     # Periodic reporting
-
     def initialise_periodic_reporting(self):
         """ Initialise periodic reporting """
         data_set_name = f'Quanta concentration {self.environment_name}'
@@ -124,5 +118,4 @@ class Microenvironment:
 
     def periodic_reporting_callback(self):
         """ Callback to collect data for periodic reporting """
-        return {f'Quanta concentration {self.environment_name}':self.get_quanta_concentration()}
-
+        return {f'Quanta concentration {self.environment_name}': self.get_quanta_concentration()}

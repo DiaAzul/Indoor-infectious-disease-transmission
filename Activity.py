@@ -1,32 +1,17 @@
 """ Python library to model the spread of infectious diseases within a microenvironment """
 
-
 from HealthDES import ActivityBase
 
 
 class Visitor_activity(ActivityBase):
     """Person's activity within the system, models interaction between people and environment """
 
-    def __init__(self, simulation_params, **kwargs):
-        """Create a new activity
-
-        Arguments:
-            simulation_params {dictionary} -- keyword arguments for the simulation
-            kwargs {dictionary} -- Keyword arguments for the activity
-        """
-        # Initialise the base class
-        super().__init__(simulation_params, **kwargs)
-
-        self.unpack_parameters(**kwargs)
-
-    """
-    The following pair of methods define the parametes passed to the activity.
-    The pack method is used to create the dictionary of parameters stored in
-    the activity dictionary. The method is static as it is called on the class
-    before an instance is created. The unpack parameter class is called when
-    the parameters are read from the activity dictionary and used to create an
-    actual instance of the activity prior to it being called (started).
-    """
+    # The following pair of methods define the parametes passed to the activity.
+    # The pack method is used to create the dictionary of parameters stored in
+    # the activity dictionary. The method is static as it is called on the class
+    # before an instance is created. The unpack parameter class is called when
+    # the parameters are read from the activity dictionary and used to create an
+    # actual instance of the activity prior to it being called (started).
 
     def unpack_parameters(self, **kwargs):
         """Unpack the parameter list and store in local instance variables."""

@@ -90,8 +90,10 @@ class Routing:
     def get_activity(self, node_id):
         """Determine the next activity, return both the activity and next node ID"""
 
-        # TODO: This assumes we only have one possible edge from Node, the code will need to be developed
-        # to include routing logic.
+        # TODO: This assumes we only have one possible edge from Node, the code will need to be
+        # developed to include routing logic. Need a *decision method* to calculate next_activity_id
+        # methods can be standard or customised, each activity has a decision at the end that can
+        # be overridden - the default would be next_id no choices.
         if node_id:
             # For each of the available edges
             for items in self.G.out_edges(node_id, keys=True):

@@ -60,6 +60,11 @@ class ActivityBase():
         self.message_to_activity = kwargs['message_to_activity']
         self.message_to_person = kwargs['message_to_person']
 
+        self.unpack_parameters(**kwargs)
+
+    def unpack_parameters(self, **kwargs):
+        pass
+
     def run(self):
         """Run the event loop for the activity
 

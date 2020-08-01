@@ -148,6 +148,9 @@ class PersonBase:
         activity_a = self.get_activity(self.starting_node_id)
         activity_b = None
 
+        # TODO: Add a periodic timeout (optional)
+        #       periodic loop - inner state machine - end sm loop - yield - end periodic loop
+
         # For each microenvironment that the person visits
         finished = False
         while not finished:
