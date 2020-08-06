@@ -1,14 +1,15 @@
-""" Python library to model the spread of infectious diseases within a microenvironment """
+""" HealthDES - A python library to support discrete event simulation in health and social care """
 
 import yaml
 import inspect
+import sys
 
 
 class ActivityBase():
     """Person's activity within the system, models interaction between people and environment """
 
     # The following dictionary defines the state diagram for the control loop
-    state_diagram = yaml.load("""
+    state_diagram = yaml.load(sys.intern("""
     init:
       initialise:
         next_state: initialised
@@ -42,7 +43,7 @@ class ActivityBase():
         next_state: ended
         function: end
         success_message: ended
-    """, Loader=yaml.SafeLoader)
+    """), Loader=yaml.SafeLoader)
 
     def __init__(self, simulation_params, **kwargs):
         """Create a new activity
@@ -55,7 +56,6 @@ class ActivityBase():
         self.dc = simulation_params.get('data_collector', None)
         self.time_interval = simulation_params.get('time_interval', None)
 
-        # TODO: Should we make these keyword arguments more explicit for the base class?
         self.person = kwargs['person']
         self.message_to_activity = kwargs['message_to_activity']
         self.message_to_person = kwargs['message_to_person']
@@ -87,11 +87,11 @@ class ActivityBase():
             # set an event flag to mark end of activity and call the activity class
             received_message = yield self.message_to_activity.get()
 
-            actions = ActivityBase.state_diagram.get(state, 'No State') \
-                                                .get(received_message, 'No message')
-            if actions == 'No state':
+            actions = ActivityBase.state_diagram.get(state, 'NoState') \
+                                                .get(received_message, 'NoMessage')
+            if actions == 'NoState':
                 raise ValueError('Activity state error')
-            if actions == 'No message':
+            if actions == 'NoMessage':
                 raise ValueError('Activity received message error')
 
             next_state = actions['next_state']

@@ -1,11 +1,13 @@
-""" HealthDES class to raise an exception when variables don't meet required conditions """
+""" HealthDES - A python library to support discrete event simulation in health and social care """
+
 
 class Check:
     """ Class containing functions to check whether values meet certain conditions
 
-    In Data Science analysis it is more important to ensure that data is correct than code is fast. Therefore,
-    a greater degree of parameter checking may be appropriate to ensure that parameters meet defined criteria.
-    This Class contains common checks that are applied to base types (int, float, string) to confirm data integrity.
+    In Data Science analysis it is more important to ensure that data is correct than code is fast.
+    Therefore, a greater degree of parameter checking may be appropriate to ensure that parameters
+    meet defined criteria. This Class contains common checks that are applied to base types (int,
+     float, string) to confirm data integrity.
     """
     @staticmethod
     def is_equal_to_zero(x):
@@ -38,7 +40,7 @@ class Check:
             raise ValueError('value must be a number')
         if not (x != 0):
             raise ValueError('value must not equal zero')
-    
+
     @staticmethod
     def is_greater_than_zero(x):
         """Check that variable is greater than zero.
@@ -103,6 +105,7 @@ class Check:
         if not (x <= 0):
             raise ValueError('value must be less than, or equal to, zero')
 
+
 class CheckList:
     """ Class containing functions to check whether lists have certain characteristics """
 
@@ -118,10 +121,10 @@ class CheckList:
         """
         if not isinstance(li, list):
             raise ValueError('This must be a list')
-    
+
     @staticmethod
     def fail_if_list_empty(li):
-        """Check with a list is empy
+        """Check with a list is empty
 
         Args:
             li (list): The variable to be tested
@@ -154,7 +157,7 @@ class CheckList:
 
     @staticmethod
     def is_a_dictionary(di):
-        """Check whether item is a dictionaty
+        """Check whether item is a dictionary
 
         Args:
             di (dict): The variable to be tested
@@ -173,8 +176,8 @@ class CheckList:
             li (dict): The dictionary to be tested
 
         Raises:
-            ValueError: The dictionary is not empy
-        """    
+            ValueError: The dictionary is not empty
+        """
         if not li:
             raise ValueError('list must have at least one entry')
 
@@ -188,8 +191,6 @@ class CheckList:
 
         Raises:
             ValueError: The key is in the dictionary
-        """   
+        """
         if test_key in di:
             raise ValueError('Cannot have duplicate keys in dictionary')
-
-    

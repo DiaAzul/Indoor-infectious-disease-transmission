@@ -1,4 +1,4 @@
-""" Python library to model the spread of infectious diseases within a microenvironment """
+""" HealthDES - A python library to support discrete event simulation in health and social care """
 
 import networkx as nx
 
@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from typing import Any, Dict
 
 
+# TODO: Improve type hinting to remove Any.
+#       activity_class->ActivityBase,
+#       Dict(str, Any)->Dict(str, [int, float, str])
 @dataclass(frozen=True)
 class Activity_ID:
     __slots__ = ['next_activity_id', 'activity_class', 'kwargs']
@@ -68,12 +71,14 @@ class Routing:
             activity_name {string} -- Name of the activity
 
         Returns:
-            (class obj, dictionary) -- Class for the activity, parameters to pass to activity when instance created
+            (class obj, dictionary) -- Class for the activity, parameters to pass to activity
+                                       when instance created
         """
         return self.activities[activity_name]
 
     # Methods to interact with the routing graph
-    # TODO: Switch nodes and edges around - Node is the activity, edges are the transitions between activities (better for display)
+    # TODO: Switch nodes and edges around - Node is the activity, edges are the transitions
+    #  between activities (better for display)
     def add_decision(self, name):
         """Create a decision point in the graph with decision function"""
 
@@ -82,7 +87,8 @@ class Routing:
         return node_id
 
     def add_activity(self, name, starting_node, ending_node):
-        """Create a directed between two nodes edge in the graph with a specific activity attached"""
+        """Create a directed between two nodes edge in the graph with a specific activity attached
+        """
         edge_id = self.G.add_edge(starting_node, ending_node, name)
 
         return edge_id

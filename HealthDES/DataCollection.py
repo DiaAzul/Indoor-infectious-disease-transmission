@@ -1,31 +1,33 @@
-""" Python library to model the spread of infectious diseases within a microenvironment """
+""" HealthDES - A python library to support discrete event simulation in health and social care """
 
-import pandas as pd # modin
-import simpy
-from io import BytesIO, StringIO
-from csv import DictWriter, reader
+import pandas as pd  # modin
+
+from io import StringIO
+from csv import DictWriter
 
 # Import local libraries
 # pylint: disable=relative-beyond-top-level
-from .Check import Check, CheckList
+from .Check import CheckList
+
 
 class DataCollection:
     """ Class to collect data from across the simulation
-    
+
     Data collection can be period (driven by periodic simpy event process)
     or logged by other parts of the simulation.
 
-    Data collection writes to an in-memory csv file, which may be exported or converted to pandas DataFrame
+    Data collection writes to an in-memory csv file, which may be converted to a pandas DataFrame
 
     """
-    # TODO: Implement some form of memory management to flush in-memory csv to disk/database if memory tight
+    # TODO: Implement some form of memory management to flush in-memory csv to disk/database if
+    #       memory tight
     # TODO: Apache Arrow: Consider using, however, doesn't always support windows.
 
     # TODO: Update parameters at init to use param dictionary.
     def __init__(self, env, simulation_name=None, simulation_run=None):
         """ Create a class to collect data within a simulation run
-        
-        Keyworkd parameters:
+
+        Keyword parameters:
         env                 simpy environment
         simulation_name     The name for this simulation
         simulation_run      The sequence number for this run of the simulation
@@ -40,13 +42,12 @@ class DataCollection:
         self.memory_writer = {}
         self.counters = {}
 
-
     """ Template for periodic reporting
 
     The callback function returns a dictionary of data to be included within the report.
     The values in this dictionary must be available when the periodic reporting is initialised
     as the callback will be called to create the column headers for the report.
-    
+
     def periodic_reporting_callback(self):
         ### Callback to collect data for periodic reporting ###
         return {'quanta_concentration': self.quanta_concentration}
@@ -70,7 +71,7 @@ class DataCollection:
         Keyword parameters:
         data_set_name           The name for the data set to be recorded
         callback                Function to call periodically to collect data
-        periods                 The number of periods between data collections 
+        periods                 The number of periods between data collections
 
         Note data collection is triggered when the model first starts
         """
@@ -89,15 +90,17 @@ class DataCollection:
 
         # Create a new memory file into which data will be stored as CSV file
         self.memory_file[data_set_name] = StringIO()
-        self.memory_writer[data_set_name] = DictWriter(self.memory_file[data_set_name], header_list, restval='Null', extrasaction='raise')
+        self.memory_writer[data_set_name] = DictWriter(self.memory_file[data_set_name],
+                                                       header_list,
+                                                       restval='Null',
+                                                       extrasaction='raise')
 
         self.memory_writer[data_set_name].writeheader()
 
         self.env.process(self.periodic_reporting(data_set_name, callback, periods))
 
-
     def periodic_reporting(self, data_set_name, callback, periods):
-        """ Add a new periodic reporting process 
+        """ Add a new periodic reporting process
 
         Keyword parameters:
         data_set_name           The name of the dataset into which data stored
@@ -112,7 +115,6 @@ class DataCollection:
             self.memory_writer[data_set_name].writerow(data)
 
             yield self.env.timeout(periods)
-
 
     def log_reporting(self, data_set_name, column_dictionary):
         """ Log data submitted by the simulation
@@ -136,7 +138,10 @@ class DataCollection:
 
             # Create a new memory file into which data will be stored as CSV file
             self.memory_file[data_set_name] = StringIO()
-            self.memory_writer[data_set_name] = DictWriter(self.memory_file[data_set_name], header_list, restval='Null', extrasaction='raise')
+            self.memory_writer[data_set_name] = DictWriter(self.memory_file[data_set_name],
+                                                           header_list,
+                                                           restval='Null',
+                                                           extrasaction='raise')
 
             self.memory_writer[data_set_name].writeheader()
 
@@ -146,10 +151,9 @@ class DataCollection:
         column_dictionary['simulation_name'] = self.simulation_name
         self.memory_writer[data_set_name].writerow(column_dictionary)
 
-
     def counter_increment(self, data_set_name, amount=None):
         """Increment counter
-        
+
         Keyword parameters:
         data_set_name           The name of the dataset into which data stored
          """
@@ -161,10 +165,9 @@ class DataCollection:
 
         self.counters[data_set_name] += amount
 
-
     def counter_decrement(self, data_set_name, amount=None):
         """Decrement counter
-        
+
         Keyword parameters:
         data_set_name           The name of the dataset into which data stored
          """
@@ -180,7 +183,7 @@ class DataCollection:
         """ Return stored data as a pandas data frame """
         file = self.memory_file.get(data_set_name, None)
         df = None
-        if file != None:
+        if file is not None:
             file.seek(0)
             df = pd.read_csv(file)
 
@@ -192,8 +195,8 @@ class DataCollection:
         return self.counters.get(data_set_name, None)
 
     def get_list_of_reports(self):
-        """ Get a list of reports 
-        
+        """ Get a list of reports
+
         Return: list of reports
         """
         report_list = []
@@ -201,10 +204,3 @@ class DataCollection:
             report_list.append(key)
 
         return report_list
-
-    
-
-
-
-
-
