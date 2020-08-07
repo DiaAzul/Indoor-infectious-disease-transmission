@@ -7,6 +7,7 @@ from .DecisionBase import DecisionBase
 from .PersonBase import PersonBase
 from .ResourceBase import ResourceBase
 from .Routing import Routing, Activity_ID
+from .SimulationBase import SimulationBase
 from .Check import CheckList, Check
 
 __all__ = ['ActivityBase',
@@ -17,4 +18,5 @@ __all__ = ['ActivityBase',
            'DecisionBase',
            'PersonBase',
            'ResourceBase',
-           'Routing']
+           'Routing',
+           'SimulationBase']

@@ -82,7 +82,7 @@ class Visitor_activity(ActivityBase):
             period_trigger = self.env.timeout(1, value='periodic')
 
             # Add quanta to the environment
-            quanta_emission_rate = self.person.get_quanta_emission_rate()
+            quanta_emission_rate = self.person.get_attribute('quanta_emission_rate')
             self.microenvironment.add_quanta_to_microenvironment(
                                                     quanta_emission_rate * self.time_interval)
 

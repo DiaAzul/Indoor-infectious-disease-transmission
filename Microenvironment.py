@@ -9,7 +9,12 @@ from HealthDES import Check
 class Microenvironment:
     """ Class to implement a microenvironment as a simpy discreate event simulation """
 
-    def __init__(self, simulation_params, environment_name, volume, air_exchange_rate, capacity=None):
+    def __init__(self,
+                 simulation_params,
+                 environment_name,
+                 volume,
+                 air_exchange_rate,
+                 capacity=None):
         """Initialise the microenvironment
 
         Arguments:

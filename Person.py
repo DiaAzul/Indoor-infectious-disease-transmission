@@ -17,7 +17,13 @@ class Person(PersonBase):
         which are callled as each one completes.
     """
 
-    def __init__(self, simulation_params, starting_node_id, infection_status_label=None, quanta_emission_rate=None, inhalation_rate=None, person_type=None):
+    def __init__(self,
+                 simulation_params,
+                 starting_node_id,
+                 infection_status_label=None,
+                 quanta_emission_rate=None,
+                 inhalation_rate=None,
+                 person_type=None):
         """Establish the persons characteristics, this will be specific to each model
 
         Args:
@@ -29,23 +35,25 @@ class Person(PersonBase):
             person_type (string, optional): Type of the person (visitor, staff, etc.). Defaults to None.
         """
         # Initialise the base class
-        super().__init__(simulation_params, starting_node_id, person_type)
+        super().__init__(simulation_params, starting_node_id)
 
         # Characteristics
-        self.infection_status = DiseaseProgression(infection_status_label)
-        self.quanta_emission_rate = quanta_emission_rate if quanta_emission_rate else 147
-        self.inhalation_rate = inhalation_rate if inhalation_rate else 0.54  # m^3 h^-1
+        self.add_attribute('infection_status', DiseaseProgression(infection_status_label))
+        quanta_emission_rate = quanta_emission_rate if quanta_emission_rate else 147
+        self.add_attribute('quanta_emission_rate', quanta_emission_rate)
+        inhalation_rate = inhalation_rate if inhalation_rate else 0.54
+        self.add_attribute('inhalation_rate', inhalation_rate)
 
-        self.cumulative_exposure = 0
-        self.infected = False
+        self.add_attribute('cumulative_exposure', 0)
+        self.add_attribute('infected', False)
 
-    def get_quanta_emission_rate(self):
-        """Get the parsons quanta emmission rate
+        self.add_attribute('person_type', person_type)
+        self.add_attribute('age', 50)
+        self.add_attribute('sex', 'female')
 
-        Returns:
-            Number -- Quanta emission rate
-        """
-        return self.quanta_emission_rate
+        self.add_do_action('expose_person_to_quanta', self.expose_person_to_quanta)
+        self.add_do_action('infection_risk', self.infection_risk)
+        self.add_do_action('infection_risk_instant', self.infection_risk_instant)
 
     def expose_person_to_quanta(self, quanta_concentration):
         """Calculate the amount of quanta the person is exposed to
@@ -57,7 +65,6 @@ class Person(PersonBase):
         # TODO: We don't use cumulative exposure, so can we remove?
         self.cumulative_exposure += quanta_concentration
 
-        # if random.random() < self.infection_risk():
         if random.random() < self.infection_risk_instant(quanta_concentration):
             if self.infection_status.is_state('susceptible'):
                 self.log_infection()
@@ -65,7 +72,7 @@ class Person(PersonBase):
 
             self.infection_status.set_state('exposed')
 
-    # TODO: Check whether this can be removed
+    # TODO: Check whether this can be removed [[Used in log_infection_risk]]
     def infection_risk(self):
         """Determine risk that a patient is infected"""
         return 1 - math.exp(-self.inhalation_rate * self.time_interval * self.cumulative_exposure)

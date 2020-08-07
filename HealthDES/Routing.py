@@ -77,8 +77,6 @@ class Routing:
         return self.activities[activity_name]
 
     # Methods to interact with the routing graph
-    # TODO: Switch nodes and edges around - Node is the activity, edges are the transitions
-    #  between activities (better for display)
     def add_decision(self, name):
         """Create a decision point in the graph with decision function"""
 

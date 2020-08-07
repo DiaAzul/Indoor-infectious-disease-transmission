@@ -5,9 +5,8 @@ import time
 
 # Import local libraries
 from HealthDES import Check
-from HealthDES import DataCollection
-from HealthDES import Routing
 from HealthDES import CheckList
+from HealthDES import SimulationBase
 
 from Microenvironment import Microenvironment
 from Person import Person
@@ -19,7 +18,7 @@ from Configuration import Config
 #       within the simulation where there are multiple return values.]
 
 
-class Simulation:
+class Simulation(SimulationBase):
     """ Class to implement a simulation using simpy discreate event simulation
 
     The simulation class is the main controlling class for the simulation and
@@ -33,72 +32,27 @@ class Simulation:
      """
 
     # TODO: Move simulation_run to run() method call, and implement a reset simulation.
-    def __init__(self, simulation_name=None, simulation_run=None, microenvironment=None, periods=None):
+    def initialise(self, **kwargs) -> None:
         """Initialise the simulation.
-
-        Keyword Arguments:
-            simulation_name {string} -- The name for this simulation (default: {None})
-            simulation_run {string} -- The sequence number for this run of the simulation (default: {None})
         """
-        # Create a simpy environment
-        self.env = simpy.Environment()
-        self.dc = DataCollection(self.env, simulation_name, simulation_run)
+
+        self.microenvironment_name = kwargs['microenvironment']
 
         # Set the time interval relative to one hour (minutes = 1/60)
         self.time_interval = 1/60
+        self.add_simulation_param('time_interval', self.time_interval)
         # Number of periods the simulation will run
-        self.periods = periods if periods else 180
-        # Name of microenvironment to use
-        self.microenvironment_name = microenvironment
-
-        # Routing of people through the model, nodes are decisions, edges are activities
-        self.routing = Routing()
+        self.periods = kwargs['periods'] if kwargs['periods'] else 180
+        self.add_simulation_param('simulation_length', self.periods)
 
         # Import configuration information
         self.config = Config()
         self.config.import_microenvironments()
-
-        self.simulation_params = {'simpy_env': self.env,
-                                  'data_collector': self.dc,
-                                  'configuration': self.config,
-                                  'routing': self.routing,
-                                  'time_interval': self.time_interval,
-                                  'simulation_length': self.periods}
+        self.add_simulation_param('configuration', self.config)
 
         # Variables in this scope only
         self.microenvironments = {}
         self.population = {}
-
-    def get_list_of_reports(self):
-        """Get the list of reports.
-
-        Returns:
-            list of strings -- List of reports.
-        """
-
-        return self.dc.get_list_of_reports()
-
-    def get_results(self, data_set_name):
-        """Return stored report as a pandas dataFrame.
-
-        Arguments:
-            data_set_name {string} -- Name of the dataset to get
-
-        Returns:
-            pandas dataFrame -- dataFrame containing the results
-        """
-        return self.dc.get_results(data_set_name)
-
-    def get_counter(self, data_set_name):
-        """Return stored value of a counter
-
-        Arguments:
-            data_set_name {string} -- Name of the counter to get
-
-        Returns:
-            number -- value of the counter
-        """
-        return self.dc.get_counter(data_set_name)
 
     def create_microenvironments(self):
         """Create the microenvironments used within the simulation."""
@@ -108,20 +62,27 @@ class Simulation:
         for name, microenv in self.config.microenvironments.items():
             # name = microenv.get('environment')
             volume = microenv.get('volume')  # m^3
-            air_exchange_rate = microenv.get('air-exchange-rate')  # h^-1: natural ventilation (0.2) mechanical ventilation (2.2)
+            air_exchange_rate = microenv.get('air-exchange-rate')
             capacity = microenv.get('visitor-capacity')
             capacity = None if capacity == 0 else capacity
 
-            self.microenvironments[name] = Microenvironment(self.simulation_params, name, volume, air_exchange_rate, capacity=capacity)
+            self.microenvironments[name] = Microenvironment(self.simulation_params,
+                                                            name,
+                                                            volume,
+                                                            air_exchange_rate,
+                                                            capacity=capacity)
 
     def create_activities(self, microenvironment_name):
         """Create a dictionary of activities."""
 
-        duration = self.config.microenvironments.get(microenvironment_name).get('average-length-of-stay')
+        duration = self.config.microenvironments.get(microenvironment_name) \
+                                                .get('average-length-of-stay')
         duration = duration / self.time_interval  # Convert hours to time measures
 
         activity_name = 'visit environment'
-        activity_class, arguments = Visitor_activity.pack_parameters(self.microenvironments[microenvironment_name], duration)
+        activity_class, arguments = Visitor_activity.pack_parameters(
+                                                    self.microenvironments[microenvironment_name],
+                                                    duration)
 
         self.routing.register_activity(activity_name, activity_class, arguments)
 
@@ -137,14 +98,20 @@ class Simulation:
 
         return routing_entry_point
 
-    def create_people(self, arrivals_per_hour, max_arrivals=None, quanta_emission_rate=None, inhalation_rate=None):
+    def create_people(self,
+                      arrivals_per_hour,
+                      max_arrivals=None,
+                      quanta_emission_rate=None,
+                      inhalation_rate=None):
         """ Create a method of generating people """
 
         is_someone_infected = False
         generated_people = 0
 
         while True:
-            infection_status_label = DiseaseProgression.valid_state('susceptible') if is_someone_infected else DiseaseProgression.valid_state('infected')
+            infection_status_label = DiseaseProgression.valid_state('susceptible') \
+                                     if is_someone_infected \
+                                     else DiseaseProgression.valid_state('infected')
             is_someone_infected = True
 
             generated_people += 1
@@ -164,7 +131,12 @@ class Simulation:
             # If we have generated enough people then stop
             if max_arrivals and (generated_people >= max_arrivals): break  # noqa:E701
 
-    def run(self, arrivals_per_hour=None, quanta_emission_rate=None, inhalation_rate=None, max_arrivals=None, report_time=None):
+    def run(self,
+            arrivals_per_hour=None,
+            quanta_emission_rate=None,
+            inhalation_rate=None,
+            max_arrivals=None,
+            report_time=None):
         """ Run the simulation
 
         Keyword arguments:

@@ -5,8 +5,24 @@ import itertools
 import yaml
 import sys
 
+from .ActionQuery import ActionQuery
 
-class PersonBase:
+from typing import (
+    TYPE_CHECKING,
+    ClassVar,
+    ContextManager,
+    Generic,
+    MutableSequence,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+)
+
+# Type aliases
+
+
+class PersonBase(ActionQuery):
     """ Class to implement a person as a simpy discreate event simulation
 
         The person will have various characteristics which influences the simulation
@@ -63,7 +79,7 @@ class PersonBase:
         next_state: resources_seized_a
     """), Loader=yaml.SafeLoader)
 
-    def __init__(self, simulation_params, starting_node_id, person_type=None):
+    def __init__(self, simulation_params, starting_node_id):
         """Establish the persons characteristics, this will be specific to each model
 
         Arguments:
@@ -87,11 +103,8 @@ class PersonBase:
         # Routing is the list of environments that the person traverses
         self.starting_node_id = starting_node_id
 
-        # Person type is a characteristic
-        self.person_type = person_type
-
-        # Initialise do and attribute lists
-        self._initialise_do_actions_and_attributes = {}
+        # Initialise ActionQuery
+        super().__init__()
 
     def get_PID(self):
         """Return the Person ID (PID)
@@ -100,38 +113,6 @@ class PersonBase:
             string -- Person ID for the instance
         """
         return self.PID
-
-    # TODO: Build out the do and query functions for person, activity and resource objects.
-    # Need to create dictionary of actions and parameters.
-    # Subclassing allows dictionary of actions/ activities to be extended.
-    # Need to provide error checking if actions/ parameters not in dictionary.
-    def _initialise_do_actions_and_attributes(self):
-        self.do_action = {}
-        self.extend_do_list()
-        self.attributes = {}
-        self.extend_attribute_list()
-
-    def extend_do_list(self):
-        pass
-
-    def extend_query_list(self):
-        pass
-
-    def do(self, action, **kwargs):
-        """ Perform an action on the person """
-        action_function = self.do_action.get(action, None)
-        if action_function:
-            action_function(**kwargs)
-        else:
-            raise ValueError(f'Person received an invalid action: {action}')
-
-    def query(self, attribute_to_query):
-        """ Get a the value of an attribute."""
-        return_value = self.attributes.get(attribute_to_query, None)
-        if return_value is None:
-            raise ValueError(f'Person received an invalid parameter to query: {attribute_to_query}')
-
-        return return_value
 
     def run(self):
         """ Simulation process for the person
