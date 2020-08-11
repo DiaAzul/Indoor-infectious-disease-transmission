@@ -2,19 +2,9 @@
 
 import networkx as nx
 
-from dataclasses import dataclass
-from typing import Any, Dict
-
-
-# TODO: Improve type hinting to remove Any.
-#       activity_class->ActivityBase,
-#       Dict(str, Any)->Dict(str, [int, float, str])
-@dataclass(frozen=True)
-class Activity_ID:
-    __slots__ = ['next_activity_id', 'activity_class', 'kwargs']
-    next_activity_id: str
-    activity_class: Any
-    kwargs: Dict[str, Any]
+from typing import List, Dict, Optional, Tuple
+from .ActivityBase import ActivityBase, Activity
+from .DecisionBase import DecisionBase, Decision
 
 
 class Routing:
@@ -44,67 +34,75 @@ class Routing:
 
         # Dictionary of activities and reference to implementation classes
         self.activities = {}
+        self.decisions = {}
 
     # Methods to interact with the activity dictionary
-    def register_activity(self, activity_name, activity_class, arguments):
-        """Register an activity with the activity registry
+    def register_activity(self,
+                          activity_id: str,
+                          activity_class: ActivityBase,
+                          **activity_kwargs: Dict) -> None:
 
-        Arguments:
-            activity_name {str} -- Name of the activity to register
-            activity_class {class obj} -- Activity class, a child instance of this class
-            arguments {dictionary} -- dictionary of arguments passed to the activity when called
-        """
-        self.activities[activity_name] = (activity_class, arguments)
+        if self.activities.get(activity_id) is None:
+            self.activities[activity_id] = Activity(activity_id, None, activity_class, activity_kwargs)
+        else:
+            raise ValueError(f'{activity_id} is not a unique activity ID.')
 
-    def get_activities(self):
-        """Get the list of registered activities
-
-        Returns:
-            Dictionary -- Dictionary of registered activities.
-        """
+    def get_registered_activities(self) -> Dict:
         return self.activities
 
-    def get_activity_details(self, activity_name):
-        """Return a tuple containing the activity class and arguments
+    def get_activity(self, activity_id: str) -> Optional[Activity]:
+        return self.activities.get(activity_id)
 
-        Arguments:
-            activity_name {string} -- Name of the activity
+    # Methods to interact with the activity dictionary
+    def register_decision(self, decision_id: str,
+                          decision_class: DecisionBase,
+                          **decision_kwargs: Dict) -> None:
 
-        Returns:
-            (class obj, dictionary) -- Class for the activity, parameters to pass to activity
-                                       when instance created
-        """
-        return self.activities[activity_name]
+        if self.decisions.get(decision_id) is None:
+            self.decisions[decision_id] = Decision(decision_id, decision_class, decision_kwargs)
+        else:
+            raise ValueError(f'{decision_id} is not a unique decision ID.')
+
+    def get_registered_decisions(self) -> Dict:
+        return self.decisions
+
+    def get_decision(self, decision_id: str) -> Optional[Decision]:
+        return self.decisions.get(decision_id)
 
     # Methods to interact with the routing graph
-    def add_decision(self, name):
+    def add_decision(self, decision_node: str) -> None:
         """Create a decision point in the graph with decision function"""
+        if self.G.has_node(decision_node):
+            print(f'Node {decision_node} already exists. Updating node.')
+        self.G.add_node(decision_node, decision=self.get_decision(decision_node))
 
-        node_id = self.G.add_node(name)
-
-        return node_id
-
-    def add_activity(self, name, starting_node, ending_node):
+    def add_activity(self, activity_name: str,
+                     starting_node: str,
+                     ending_node: str) -> Tuple[str, str, int]:
         """Create a directed between two nodes edge in the graph with a specific activity attached
         """
-        edge_id = self.G.add_edge(starting_node, ending_node, name)
+        if not self.G.has_node(starting_node):
+            print(f'Creating node {starting_node}')
+        if not self.G.has_node(ending_node):
+            print(f'Creating node {ending_node}')
 
-        return edge_id
+        edge_key = self.G.add_edge(starting_node, ending_node, activity=activity_name)
 
-    def get_activity(self, node_id):
-        """Determine the next activity, return both the activity and next node ID"""
+        return (starting_node, ending_node, edge_key)
 
-        # TODO: This assumes we only have one possible edge from Node, the code will need to be
-        # developed to include routing logic. Need a *decision method* to calculate next_activity_id
-        # methods can be standard or customised, each activity has a decision at the end that can
-        # be overridden - the default would be next_id no choices.
-        if node_id:
-            # For each of the available edges
-            for items in self.G.out_edges(node_id, keys=True):
-                _,  next_id, activity_id = items
-            activity_class, arguments = self.activities[activity_id]
-            activity = Activity_ID(next_id, activity_class, arguments)
-        else:
-            activity = Activity_ID(None, None, None)
+    # Methods to support routing person through the graph
+    def get_decision_from_activity_ref(self, activity_ref: Tuple[str, str, int]) -> Decision:
+        decision = self.decisions.get(activity_ref[1])
+        return decision
 
-        return activity
+    def get_activities_from_decision_id(self, decision_id: str) -> List[Activity]:
+        activity_list = []
+        for u, v, k, activity_name in self.G.out_edges([decision_id], keys=True, data='activity'):
+            activity = self.activities.get(activity_name)
+            # Need to make sure that we are not sharing resources between instances.
+            activity_list.append(Activity(activity.id,
+                                          (u, v, k),
+                                          activity.activity_class,
+                                          activity.kwargs.copy()))
+
+        return activity_list

@@ -39,7 +39,7 @@ class Simulation(SimulationBase):
         self.microenvironment_name = kwargs['microenvironment']
 
         # Set the time interval relative to one hour (minutes = 1/60)
-        self.time_interval = 1/60
+        self.time_interval = 1 / 60
         self.add_simulation_param('time_interval', self.time_interval)
         # Number of periods the simulation will run
         self.periods = kwargs['periods'] if kwargs['periods'] else 180
@@ -81,10 +81,10 @@ class Simulation(SimulationBase):
 
         activity_name = 'visit environment'
         activity_class, arguments = Visitor_activity.pack_parameters(
-                                                    self.microenvironments[microenvironment_name],
-                                                    duration)
+            self.microenvironments[microenvironment_name],
+            duration)
 
-        self.routing.register_activity(activity_name, activity_class, arguments)
+        self.routing.register_activity(activity_name, activity_class, **arguments)
 
     def create_network_routing(self):
         """Create a simple network routing.
@@ -110,8 +110,9 @@ class Simulation(SimulationBase):
 
         while True:
             infection_status_label = DiseaseProgression.valid_state('susceptible') \
-                                     if is_someone_infected \
-                                     else DiseaseProgression.valid_state('infected')
+                if is_someone_infected \
+                else DiseaseProgression.valid_state('infected')
+
             is_someone_infected = True
 
             generated_people += 1

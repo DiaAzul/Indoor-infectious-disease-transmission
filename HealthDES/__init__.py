@@ -6,7 +6,7 @@ from .DataCollection import DataCollection
 from .DecisionBase import DecisionBase
 from .PersonBase import PersonBase
 from .ResourceBase import ResourceBase
-from .Routing import Routing, Activity_ID
+from .Routing import Routing
 from .SimulationBase import SimulationBase
 from .Check import CheckList, Check
 

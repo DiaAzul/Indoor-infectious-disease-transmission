@@ -30,7 +30,7 @@ class Visitor_activity(ActivityBase):
             Tuple(class, dictionary) -- This class and a dictionary of parameters required to
                                         instantiate an instance
         """
-
+        # TODO: Rename as attributes and use existing mechanisms for setting and getting
         parameters = {'microenvironment': microenvironment,
                       'duration': duration
                       }
@@ -41,26 +41,26 @@ class Visitor_activity(ActivityBase):
         self.request_entry = self.microenvironment.request_entry()
         yield self.request_entry
 
-    def execute(self):
+    def do_activity(self):
         # Wait in the shop
         self.log_visitor_activity("Visitor {PID} entered.".format(PID=self.person.PID))
         self.dc.counter_increment('Total visitors')
 
         person_request_to_leave = self.env.event()
 
-        if self.person.infection_status.is_state('infected'):
+        if self.person.get_attribute('infection_status').is_state('infected'):
             self.env.process(self.infected_visitor(
-                                            self.microenvironment.add_quanta_to_microenvironment,
-                                            person_request_to_leave,
-                                            self.duration))
+                self.microenvironment.add_quanta_to_microenvironment,
+                person_request_to_leave,
+                self.duration))
             yield person_request_to_leave
 
-        elif self.person.infection_status.is_state('susceptible'):
+        elif self.person.get_attribute('infection_status').is_state('susceptible'):
 
             self.env.process(self.susceptible_visitor(
-                                            self.microenvironment.get_quanta_concentration,
-                                            person_request_to_leave,
-                                            self.duration))
+                self.microenvironment.get_quanta_concentration,
+                person_request_to_leave,
+                self.duration))
             yield person_request_to_leave
 
         self.log_visitor_activity("Visitor {PID} left.".format(PID=self.person.PID))
@@ -84,7 +84,7 @@ class Visitor_activity(ActivityBase):
             # Add quanta to the environment
             quanta_emission_rate = self.person.get_attribute('quanta_emission_rate')
             self.microenvironment.add_quanta_to_microenvironment(
-                                                    quanta_emission_rate * self.time_interval)
+                quanta_emission_rate * self.time_interval)
 
             fired_trigger = yield period_trigger | end_trigger
             if fired_trigger == {end_trigger: 'end'}:
@@ -109,7 +109,7 @@ class Visitor_activity(ActivityBase):
 
             # Assess exposure
             quanta_concentration = self.microenvironment.get_quanta_concentration()
-            self.person.expose_person_to_quanta(quanta_concentration)
+            self.person.do('expose_person_to_quanta', quanta_concentration=quanta_concentration)
 
             fired_trigger = yield period_trigger | end_trigger
             if fired_trigger == {end_trigger: 'end'}:

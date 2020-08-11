@@ -5,21 +5,18 @@ import itertools
 import yaml
 import sys
 
+from dataclasses import dataclass
 from .ActionQuery import ActionQuery
+from .Routing import Activity, Routing
+from typing import Generator
 
-from typing import (
-    TYPE_CHECKING,
-    ClassVar,
-    ContextManager,
-    Generic,
-    MutableSequence,
-    Optional,
-    Type,
-    TypeVar,
-    Union,
-)
 
-# Type aliases
+@dataclass
+class Status:
+    __slots__ = ['activity_a', 'activity_b', 'received_message']
+    activity_a: Activity
+    activity_b: Activity
+    received_message: str
 
 
 class PersonBase(ActionQuery):
@@ -79,7 +76,7 @@ class PersonBase(ActionQuery):
         next_state: resources_seized_a
     """), Loader=yaml.SafeLoader)
 
-    def __init__(self, simulation_params, starting_node_id):
+    def __init__(self, simulation_params, starting_node_id: str) -> None:
         """Establish the persons characteristics, this will be specific to each model
 
         Arguments:
@@ -94,7 +91,7 @@ class PersonBase(ActionQuery):
         self.simulation_params = simulation_params
         self.env = simulation_params.get('simpy_env', None)
         self.dc = simulation_params.get('data_collector', None)
-        self.routing = simulation_params.get('routing', None)
+        self.routing: Routing = simulation_params.get('routing', None)
         self.time_interval = simulation_params.get('time_interval', None)
 
         # keep a record of person IDs
@@ -106,7 +103,7 @@ class PersonBase(ActionQuery):
         # Initialise ActionQuery
         super().__init__()
 
-    def get_PID(self):
+    def get_PID(self) -> str:
         """Return the Person ID (PID)
 
         Returns:
@@ -114,7 +111,7 @@ class PersonBase(ActionQuery):
         """
         return self.PID
 
-    def run(self):
+    def run(self) -> Generator[str, None, None]:
         """ Simulation process for the person
 
             Tests that the routing list still has destinations to visit
@@ -136,10 +133,11 @@ class PersonBase(ActionQuery):
             'b_to_a': self.transfer_b_to_a
         }
 
-        state = 'init'
+        machine_state = 'init'
         received_message = 'initialise_a'
-        activity_a = self.get_activity(self.starting_node_id)
+        activity_a = self.get_next_activity(self.starting_node_id)
         activity_b = None
+        status: Status = Status(activity_a, activity_b, received_message)
 
         # TODO: Add a periodic timeout (optional)
         #       periodic loop - inner state machine - end sm loop - yield - end periodic loop
@@ -148,78 +146,80 @@ class PersonBase(ActionQuery):
         finished = False
         while not finished:
 
-            actions = PersonBase.state_diagram.get(state, 'NoState') \
-                                              .get(received_message, 'NoMessage')
+            actions = PersonBase.state_diagram.get(machine_state, 'NoState') \
+                                              .get(status.received_message, 'NoMessage')
             if actions == 'NoState':
-                raise ValueError(f'Person state error:s->{state}:m->{received_message}')
+                raise ValueError(f'Person state error:s->{machine_state}:m->{received_message}')
             if actions == 'NoMessage':
-                raise ValueError(f'Person received message error:s->{state}:m->{received_message}')
+                raise ValueError(f'Person received message error:s->{machine_state}:m->{received_message}')
 
             action = actions.get('action', 'NOP')
             message_to_a = actions.get('message_to_a', 'NOP')
             message_to_b = actions.get('message_to_b', 'NOP')
-            state = actions.get('next_state', None)
-            if not state:
+            machine_state = actions.get('next_state', None)
+            if not machine_state:
                 raise ValueError('Person next state invalid')
 
             # execute action
-            activity_a, activity_b, received_message = function_dict.get(action)(activity_a,
-                                                                                 activity_b,
-                                                                                 received_message)
+            status = function_dict.get(action)(status)
 
             # execute activities
             if message_to_a != 'NOP':
-                activity_a.kwargs['message_to_activity'].put(message_to_a)
-                received_message = yield activity_a.kwargs['message_to_person'].get()
-                received_message += '_a'
+                status.activity_a.kwargs['message_to_activity'].put(message_to_a)
+                status.received_message = yield status.activity_a.kwargs['message_to_person'].get()
+                status.received_message += '_a'
 
             elif message_to_b != 'NOP':
-                activity_b.kwargs['message_to_activity'].put(message_to_b)
-                received_message = yield activity_b.kwargs['message_to_person'].get()
-                received_message += '_b'
+                status.activity_b.kwargs['message_to_activity'].put(message_to_b)
+                status.received_message = yield status.activity_b.kwargs['message_to_person'].get()
+                status.received_message += '_b'
 
-            finished = True if state == 'end' else finished
+            finished = True if machine_state == 'end' else finished
 
-    def nop(self, a, b, received_message):
+    def nop(self, status: Status) -> Status:
         """Function which does nothing
         """
-        return (a, b, received_message)
+        return status
 
-    def get_next_node(self, a, b, received_message):
-        if a.next_activity_id == 'end':
-            b = None
-            received_message = 'branch_to_end'
+    def run_a(self, status: Status) -> Status:
+        if status.activity_a is not None:
+            self.run_activity(status.activity_a)
+        return status
 
-        else:
-            # If function call function else is type activity b (make sure activity)
-            #  with self (person) and last activity (activity a) -> activity b
-            b = self.get_activity(a.next_activity_id)
-            received_message = 'initialise_b'
+    def run_b(self, status: Status) -> Status:
+        if status.activity_b is not None:
+            self.run_activity(status.activity_b)
+        return status
 
-        return (a, b, received_message)
-
-    def run_a(self, a, b, received_message):
-        if a is not None:
-            self.run_activity(a)
-        return (a, b, received_message)
-
-    def run_b(self, a, b, received_message):
-        if b is not None:
-            self.run_activity(b)
-        return (a, b, received_message)
-
-    def transfer_b_to_a(self, a, b, received_message):
-        a, b = b, None
-        received_message = 'resources_seized_a'
-        return (a, b, received_message)
+    def transfer_b_to_a(self, status: Status) -> Status:
+        status.activity_a, status.activity_b = status.activity_b, None
+        status.received_message = 'resources_seized_a'
+        return status
 
     def run_activity(self, activity):
         activity_class = activity.activity_class(self.simulation_params, **activity.kwargs)
         self.env.process(activity_class.run())
 
-    # TODO: Move this to default decisions
-    def get_activity(self, routing_id):
-        activity = self.routing.get_activity(routing_id)
+    # TODO: Still need to implement decision making logic
+    def get_next_node(self, status: Status) -> Status:
+        if status.activity_a.graph_ref[1] == 'end':
+            status.activity_b = None
+            status.received_message = 'branch_to_end'
+        else:
+            decision_id = self.routing.get_decision_from_activity_ref(status.activity_a.kwargs['graph_activity_ref'])
+            status.activity_b = self.get_next_activity(decision_id)
+            status.received_message = 'initialise_b'
+
+        return status
+
+    def get_next_activity(self, decision_id: str) -> Activity:
+        activity_list = self.routing.get_activities_from_decision_id(decision_id)
+
+        # TODO: If more than one activity need to implement decision node
+        if len(activity_list) != 1:
+            raise ValueError('Starting node must have only one next activity')
+
+        activity: Activity = activity_list[0]
 
         # Add this instance to the arguments list
         activity.kwargs['person'] = self

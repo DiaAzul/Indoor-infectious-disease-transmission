@@ -3,18 +3,11 @@
 import yaml
 import inspect
 import sys
+from simpy.resources import store
+from typing import Union, Dict, Generator, Tuple, Optional
+from dataclasses import dataclass
 
-from typing import (
-    TYPE_CHECKING,
-    ClassVar,
-    ContextManager,
-    Generic,
-    MutableSequence,
-    Optional,
-    Type,
-    TypeVar,
-    Union,
-)
+kwargTypes = Union[bool, bytes, str, int, float, complex, frozenset]
 
 
 class ActivityBase():
@@ -39,7 +32,7 @@ class ActivityBase():
     resources_seized:
       start:
         next_state: completed
-        function: execute
+        function: do_activity
         success_message: completed
     completed:
       release_resources:
@@ -57,27 +50,28 @@ class ActivityBase():
         success_message: ended
     """), Loader=yaml.SafeLoader)
 
-    def __init__(self, simulation_params, **kwargs) -> None:
+    def __init__(self, simulation_params, **kwargs: kwargTypes) -> None:
         """Create a new activity
 
         Arguments:
             simulation_params {dictionary} -- keyword arguments for the simulation
             kwargs {dictionary} -- Keyword arguments for the activity
         """
-        self.env = simulation_params.get('simpy_env', None)
-        self.dc = simulation_params.get('data_collector', None)
-        self.time_interval = simulation_params.get('time_interval', None)
+        self.env = simulation_params.get('simpy_env')
+        self.dc = simulation_params.get('data_collector')
 
-        self.person = kwargs['person']
-        self.message_to_activity = kwargs['message_to_activity']
-        self.message_to_person = kwargs['message_to_person']
+        self.time_interval = simulation_params.get('time_interval')
+
+        self.person = kwargs.get('person')
+        self.message_to_activity: store = kwargs.get('message_to_activity')
+        self.message_to_person: store = kwargs.get('message_to_person')
 
         self.unpack_parameters(**kwargs)
 
-    def unpack_parameters(self, **kwargs) -> None:
+    def unpack_parameters(self, **kwargs: str) -> None:
         pass
 
-    def run(self) -> None:
+    def run(self) -> Generator[str, None, None]:
         """Run the event loop for the activity
 
         The event loop dispatches events in response to communication from the person class
@@ -86,7 +80,7 @@ class ActivityBase():
             'initialise': self.initialise,
             'seize_resources_and_execute': self.seize_resources_and_execute,
             'seize_resources': self.seize_resources,
-            'execute': self.execute,
+            'do_activity': self.do_activity,
             'release_resources_and_end': self.release_resources_and_end,
             'release_resources': self.release_resources,
             'end': self.end
@@ -135,12 +129,12 @@ class ActivityBase():
 
     def seize_resources_and_execute(self) -> None:
         self.seize_resources()
-        self.execute()
+        self.do_activity()
 
     def seize_resources(self) -> None:
         pass
 
-    def execute(self) -> None:
+    def do_activity(self) -> None:
         pass
 
     def release_resources_and_end(self) -> None:
@@ -152,3 +146,12 @@ class ActivityBase():
 
     def end(self) -> None:
         pass
+
+
+@dataclass
+class Activity:
+    __slots__ = ['id', 'graph_ref', 'activity_class', 'kwargs']
+    id: str
+    graph_ref: Optional[Tuple[str, str, int]]
+    activity_class: ActivityBase
+    kwargs: Dict
