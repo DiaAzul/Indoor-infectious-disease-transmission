@@ -49,7 +49,6 @@ class Visitor_activity(ActivityBase):
 
         person_request_to_leave = self.env.event()
 
-        # if self.person.att['infection_status'].is_state('infected'):
         if self.person.status['infection_status'] == 'infected':
             self.env.process(self.infected_visitor(
                 self.microenvironment.add_quanta_to_microenvironment,
@@ -57,7 +56,6 @@ class Visitor_activity(ActivityBase):
                 self.duration))
             yield person_request_to_leave
 
-        # elif self.person.att['infection_status'].is_state('susceptible'):
         elif self.person.status['infection_status'] == 'susceptible':
 
             self.env.process(self.susceptible_visitor(

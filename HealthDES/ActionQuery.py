@@ -1,19 +1,14 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 import itertools
-from typing import NewType, Union, List, Dict, Any, Type, Callable
+from typing import NewType, Dict, Any, Callable
 from .AttrDict import AttrDict, StatusDict
-
-# Only permit immutable types as attributes
-AttributeTypes = Union[bool, bytes, str, int, float, complex, frozenset]
 
 
 # DoActions and Attributes are not stored within the class but a separate dictionary.
 # This is to minimise the risk that dangerous code is injected into classes if at a
 # future point in time end users are allowed to configure additional attributes.
 class ActionQuery:
-
-    valid_types: List[Type] = [bool, bytes, str, int, float, complex, frozenset]
 
     # create a unique ID counter
     get_new_id = itertools.count()

@@ -107,7 +107,7 @@ class Routing:
 
     def get_activities_from_decision_id(self, decision_id: str) -> List[Activity]:
         activity_list = []
-        for u, v, k, activity_name in self.G.out_edges(nbunch=decision_id, keys=True, data='activity'):
+        for u, v, k, activity_name in self.G.out_edges(nbunch=decision_id, keys=True, data='activity'):  # type: ignore : Problem with NetworkX tuple count
             activity = self._activities.get(activity_name)
             # Need to make sure that we are not sharing resources between instances.
             activity_list.append(Activity(activity.id,

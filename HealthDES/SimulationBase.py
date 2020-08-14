@@ -1,4 +1,4 @@
-""" Python library to model the spread of infectious diseases within a microenvironment """
+""" HealthDES - A python library to support discrete event simulation in health and social care """
 
 import simpy
 import pandas as pd
@@ -6,7 +6,7 @@ import pandas as pd
 # Import local libraries
 from HealthDES import DataCollection
 from HealthDES import Routing
-from typing import List, Any, Dict
+from typing import List, Any, Optional
 
 
 class SimulationBase:
@@ -24,9 +24,9 @@ class SimulationBase:
 
     # TODO: Move simulation_run to run() method call, and implement a reset simulation.
     def __init__(self,
-                 simulation_name: str = None,
-                 simulation_run: str = None,
-                 **kwargs: Dict[str, Any]
+                 simulation_name: Optional[str] = None,
+                 simulation_run: Optional[str] = None,
+                 **kwargs: Optional[Any]
                  ) -> None:
         """Initialise the simulation.
 

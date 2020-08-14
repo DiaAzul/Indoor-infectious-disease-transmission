@@ -38,7 +38,6 @@ class Person(PersonBase):
         super().__init__(simulation_params, starting_node_id)
 
         # Characteristics
-        # self.att['infection_status'] = DiseaseProgression(infection_status_label)
         self.status.add_status_attribute(key='infection_status',
                                          allowable_status=frozenset(['susceptible', 'exposed', 'infected', 'recovered']),
                                          default_status='susceptible')
@@ -65,7 +64,6 @@ class Person(PersonBase):
         self.att['cumulative_exposure'] += quanta_concentration
 
         if random.random() < self.infection_risk_instant(quanta_concentration):
-            # if self.att['infection_status'].is_state('susceptible'):
             if self.status['infection_status'] == 'susceptible':
                 self.log_infection()
                 self.dc.counter_increment('Infections')
