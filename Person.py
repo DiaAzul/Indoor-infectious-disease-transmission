@@ -4,8 +4,8 @@ import math
 import random
 
 from HealthDES import PersonBase
-
-from DiseaseProgression import DiseaseProgression
+from typing import Optional
+# from DiseaseProgression import DiseaseProgression
 
 
 class Person(PersonBase):
@@ -19,11 +19,11 @@ class Person(PersonBase):
 
     def __init__(self,
                  simulation_params,
-                 starting_node_id,
-                 infection_status_label=None,
-                 quanta_emission_rate=None,
-                 inhalation_rate=None,
-                 person_type=None):
+                 starting_node_id: str,
+                 infection_status_label: Optional[str] = None,
+                 quanta_emission_rate: Optional[float] = None,
+                 inhalation_rate: Optional[float] = None,
+                 person_type: Optional[str] = None):
         """Establish the persons characteristics, this will be specific to each model
 
         Args:
@@ -38,20 +38,19 @@ class Person(PersonBase):
         super().__init__(simulation_params, starting_node_id)
 
         # Characteristics
-        self.set_attribute_mutable('infection_status', DiseaseProgression(infection_status_label))
-        quanta_emission_rate = quanta_emission_rate if quanta_emission_rate else 147
-        self.set_attribute('quanta_emission_rate', quanta_emission_rate)
-        inhalation_rate = inhalation_rate if inhalation_rate else 0.54
-        self.set_attribute('inhalation_rate', inhalation_rate)
+        # self.att['infection_status'] = DiseaseProgression(infection_status_label)
+        self.status.add_status_attribute(key='infection_status',
+                                         allowable_status=frozenset(['susceptible', 'exposed', 'infected', 'recovered']),
+                                         default_status='susceptible')
 
-        # self.set_attribute('cumulative_exposure', 0)
-        self.set_attribute('infected', False)
+        self.att['quanta_emission_rate'] = quanta_emission_rate if quanta_emission_rate else 147
+        self.att['inhalation_rate'] = inhalation_rate if inhalation_rate else 0.54
+        self.att['cumulative_exposure'] = 0.0
 
-        self.set_attribute('person_type', person_type)
-        self.set_attribute('age', 50)
-        self.set_attribute('sex', 'female')
-
-        self.set_attribute('cumulative_exposure', 0.0)
+        self.att['infected'] = False
+        self.att['person_type'] = person_type
+        self.att['age'] = 50
+        self.att['sex'] = 'female'
 
         self.add_do_action('expose_person_to_quanta', self.expose_person_to_quanta)
         self.add_do_action('infection_risk', self.infection_risk)
@@ -63,18 +62,19 @@ class Person(PersonBase):
         Args:
             quanta_concentration (number): The concentration of infectious material in the environment in quanta
         """
-        self.set_attribute('cumulative_exposure', self.get_attribute('cumulative_exposure') + quanta_concentration)
+        self.att['cumulative_exposure'] += quanta_concentration
 
         if random.random() < self.infection_risk_instant(quanta_concentration):
-            if self.get_attribute('infection_status').is_state('susceptible'):
+            # if self.att['infection_status'].is_state('susceptible'):
+            if self.status['infection_status'] == 'susceptible':
                 self.log_infection()
                 self.dc.counter_increment('Infections')
 
-            self.get_attribute('infection_status').set_state('exposed')
+            self.status['infection_status'] = 'exposed'
 
     def infection_risk(self):
         """Determine risk that a patient is infected"""
-        return 1 - math.exp(-self.get_attribute('inhalation_rate') * self.time_interval * self.get_attribute('cumulative_exposure'))
+        return 1 - math.exp(-1 * self.att['inhalation_rate'] * self.time_interval * self.att['cumulative_exposure'])
 
     def infection_risk_instant(self, quanta_concentration):
         """Return the probability the person will become infections
@@ -85,15 +85,15 @@ class Person(PersonBase):
         Returns:
             number: Probability that the person will become infected.
         """
-        return 1 - math.exp(-self.get_attribute('inhalation_rate') * self.time_interval * quanta_concentration)
+        return 1 - math.exp(-1 * self.att['inhalation_rate'] * self.time_interval * quanta_concentration)
 
     def log_infection_risk(self):
         """Log visitors infection risk"""
         self.dc.log_reporting('Infection risk',
-                              {'Person': self.PID,
+                              {'Person': self.id,
                                'Infection risk': self.infection_risk()})
 
     def log_infection(self):
         """Log visitor activity within the process visitor process"""
         self.dc.log_reporting('Infections',
-                              {'Person': self.PID})
+                              {'Person': self.id})

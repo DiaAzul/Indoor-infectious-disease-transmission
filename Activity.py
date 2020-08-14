@@ -1,6 +1,7 @@
 """ Python library to model the spread of infectious diseases within a microenvironment """
 
-from HealthDES import ActivityBase
+from HealthDES import ActivityBase, ActivityType
+from typing import Tuple, Dict, Any, Type
 
 
 class Visitor_activity(ActivityBase):
@@ -13,13 +14,13 @@ class Visitor_activity(ActivityBase):
     # the parameters are read from the activity dictionary and used to create an
     # actual instance of the activity prior to it being called (started).
 
-    def unpack_parameters(self, **kwargs):
+    def unpack_parameters(self, **kwargs: Any) -> None:
         """Unpack the parameter list and store in local instance variables."""
         self.microenvironment = kwargs['microenvironment']
-        self.duration = kwargs['duration']
+        self.duration: int = kwargs['duration']
 
     @classmethod
-    def pack_parameters(cls, microenvironment, duration):
+    def pack_parameters(cls, microenvironment, duration) -> Tuple[Type[ActivityType], Dict[str, Any]]:
         """Pack parameters for the activity into a dictionary.
 
         Arguments:
@@ -31,11 +32,11 @@ class Visitor_activity(ActivityBase):
                                         instantiate an instance
         """
         # TODO: Rename as attributes and use existing mechanisms for setting and getting
-        parameters = {'microenvironment': microenvironment,
-                      'duration': duration
-                      }
+        parameters: Dict[str, Any] = {'microenvironment': microenvironment,
+                                      'duration': duration
+                                      }
 
-        return cls, parameters
+        return (cls, parameters)
 
     def seize_resources(self):
         self.request_entry = self.microenvironment.request_entry()
@@ -43,19 +44,21 @@ class Visitor_activity(ActivityBase):
 
     def do_activity(self):
         # Wait in the shop
-        self.log_visitor_activity("Visitor {PID} entered.".format(PID=self.person.PID))
+        self.log_visitor_activity(f'Visitor {self.person.id} entered.')
         self.dc.counter_increment('Total visitors')
 
         person_request_to_leave = self.env.event()
 
-        if self.person.get_attribute('infection_status').is_state('infected'):
+        # if self.person.att['infection_status'].is_state('infected'):
+        if self.person.status['infection_status'] == 'infected':
             self.env.process(self.infected_visitor(
                 self.microenvironment.add_quanta_to_microenvironment,
                 person_request_to_leave,
                 self.duration))
             yield person_request_to_leave
 
-        elif self.person.get_attribute('infection_status').is_state('susceptible'):
+        # elif self.person.att['infection_status'].is_state('susceptible'):
+        elif self.person.status['infection_status'] == 'susceptible':
 
             self.env.process(self.susceptible_visitor(
                 self.microenvironment.get_quanta_concentration,
@@ -63,7 +66,7 @@ class Visitor_activity(ActivityBase):
                 self.duration))
             yield person_request_to_leave
 
-        self.log_visitor_activity("Visitor {PID} left.".format(PID=self.person.PID))
+        self.log_visitor_activity(f'Visitor {self.person.id} left.')
 
     def infected_visitor(self, callback_add_quanta, request_to_leave, periods):
         """Callback from microenvironment for an infected person to generate quanta
@@ -82,7 +85,7 @@ class Visitor_activity(ActivityBase):
             period_trigger = self.env.timeout(1, value='periodic')
 
             # Add quanta to the environment
-            quanta_emission_rate = self.person.get_attribute('quanta_emission_rate')
+            quanta_emission_rate = self.person.att['quanta_emission_rate']
             self.microenvironment.add_quanta_to_microenvironment(
                 quanta_emission_rate * self.time_interval)
 

@@ -1,8 +1,8 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 # import simpy
-from .ActivityBase import Activity
-from typing import Dict
+from HealthDES import Activity
+from typing import Dict, NewType
 from dataclasses import dataclass
 
 
@@ -14,7 +14,7 @@ class DecisionBase:
 
     def get_next_activity(self, person, activity_a):
         """ Dummy method to anchor class """
-        return Activity(None, None, None)
+        return Activity('Dummy', None, None, None)
 
 
 @dataclass
@@ -23,3 +23,6 @@ class Decision:
     id: str
     decision_class: DecisionBase
     kwargs: Dict
+
+
+DecisionType = NewType('DecisionType', DecisionBase)

@@ -1,13 +1,15 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
+# from __future__ import annotations
 import yaml
 import inspect
 import sys
-from simpy.resources import store
-from typing import Union, Dict, Generator, Tuple, Optional
+from simpy import Store
+from typing import Callable, Union, Dict, Generator, Tuple, Optional, cast, TypeVar, Type
 from dataclasses import dataclass
+from HealthDES import ActionQueryType
 
-kwargTypes = Union[bool, bytes, str, int, float, complex, frozenset]
+kwargTypes = Union[bool, bytes, str, int, float, complex, frozenset, Store, Callable, ActionQueryType]
 
 
 class ActivityBase():
@@ -62,9 +64,9 @@ class ActivityBase():
 
         self.time_interval = simulation_params.get('time_interval')
 
-        self.person = kwargs.get('person')
-        self.message_to_activity: store = kwargs.get('message_to_activity')
-        self.message_to_person: store = kwargs.get('message_to_person')
+        self.person: ActionQueryType = cast(ActionQueryType, kwargs.get('person'))
+        self.message_to_activity: Store = cast(Store, kwargs.get('message_to_activity'))
+        self.message_to_person: Store = cast(Store, kwargs.get('message_to_person'))
 
         self.unpack_parameters(**kwargs)
 
@@ -91,7 +93,7 @@ class ActivityBase():
         finished = False
         while not finished:
             # set an event flag to mark end of activity and call the activity class
-            received_message = yield self.message_to_activity.get()
+            received_message = yield cast(str, self.message_to_activity.get())
 
             actions = ActivityBase.state_diagram.get(state, 'NoState') \
                                                 .get(received_message, 'NoMessage')
@@ -153,5 +155,8 @@ class Activity:
     __slots__ = ['id', 'graph_ref', 'activity_class', 'kwargs']
     id: str
     graph_ref: Optional[Tuple[str, str, int]]
-    activity_class: ActivityBase
-    kwargs: Dict
+    activity_class: Optional[Type[ActivityBase]]
+    kwargs: Optional[Dict]
+
+
+ActivityType = TypeVar('ActivityType', bound=ActivityBase)

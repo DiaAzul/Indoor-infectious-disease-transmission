@@ -1,21 +1,23 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 import simpy
+import simpy.events
 import itertools
 import yaml
 import sys
 
 from dataclasses import dataclass
 from .ActionQuery import ActionQuery
-from .Routing import Activity, Routing
-from typing import Generator
+from HealthDES import Routing
+from HealthDES import Activity
+from typing import Generator, Optional, NewType, Any
 
 
 @dataclass
 class Status:
     __slots__ = ['activity_a', 'activity_b', 'received_message']
-    activity_a: Activity
-    activity_b: Activity
+    activity_a: Optional[Activity]
+    activity_b: Optional[Activity]
     received_message: str
 
 
@@ -94,24 +96,13 @@ class PersonBase(ActionQuery):
         self.routing: Routing = simulation_params.get('routing', None)
         self.time_interval = simulation_params.get('time_interval', None)
 
-        # keep a record of person IDs
-        self.PID = next(PersonBase.get_new_id)
-
         # Routing is the list of environments that the person traverses
         self.starting_node_id = starting_node_id
 
         # Initialise ActionQuery
         super().__init__()
 
-    def get_PID(self) -> str:
-        """Return the Person ID (PID)
-
-        Returns:
-            string -- Person ID for the instance
-        """
-        return self.PID
-
-    def run(self) -> Generator[str, None, None]:
+    def run(self) -> Generator[simpy.events.Event, Any, Any]:
         """ Simulation process for the person
 
             Tests that the routing list still has destinations to visit
@@ -166,13 +157,19 @@ class PersonBase(ActionQuery):
             # execute activities
             if message_to_a != 'NOP':
                 status.activity_a.kwargs['message_to_activity'].put(message_to_a)
-                status.received_message = yield status.activity_a.kwargs['message_to_person'].get()
-                status.received_message += '_a'
+                rm = yield status.activity_a.kwargs['message_to_person'].get()
+                if rm is not None:
+                    status.received_message = ''.join((rm, '_a'))
+                else:
+                    raise NotImplementedError('Unknown message from activity')
 
             elif message_to_b != 'NOP':
                 status.activity_b.kwargs['message_to_activity'].put(message_to_b)
-                status.received_message = yield status.activity_b.kwargs['message_to_person'].get()
-                status.received_message += '_b'
+                rm = yield status.activity_b.kwargs['message_to_person'].get()
+                if rm is not None:
+                    status.received_message = ''.join((rm, '_a'))
+                else:
+                    raise NotImplementedError('Unknown message from activity')
 
             finished = True if machine_state == 'end' else finished
 
@@ -206,8 +203,9 @@ class PersonBase(ActionQuery):
             status.activity_b = None
             status.received_message = 'branch_to_end'
         else:
-            decision_id = self.routing.get_decision_from_activity_ref(status.activity_a.kwargs['graph_activity_ref'])
-            status.activity_b = self.get_next_activity(decision_id)
+            # TODO: Need to manage situation where there is no decision.
+            decision = self.routing.get_decision_from_activity_ref(status.activity_a.kwargs['graph_activity_ref'])
+            status.activity_b = self.get_next_activity(decision.id)
             status.received_message = 'initialise_b'
 
         return status
@@ -229,3 +227,6 @@ class PersonBase(ActionQuery):
         activity.kwargs['message_to_person'] = simpy.Store(self.env)
 
         return activity
+
+
+PersonType = NewType('PersonType', PersonBase)

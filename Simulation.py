@@ -1,6 +1,7 @@
 """ Python library to model the spread of infectious diseases within a microenvironment """
 
 import simpy
+import simpy.core
 import time
 
 # Import local libraries
@@ -9,9 +10,10 @@ from HealthDES import CheckList
 from HealthDES import SimulationBase
 
 from Microenvironment import Microenvironment
-from Person import Person
-from DiseaseProgression import DiseaseProgression
 from Activity import Visitor_activity
+from Person import Person
+# from DiseaseProgression import DiseaseProgression
+
 from Configuration import Config
 
 # TODO: from collections import namedtuple as data_structure [consider how we can use named tuples
@@ -109,9 +111,7 @@ class Simulation(SimulationBase):
         generated_people = 0
 
         while True:
-            infection_status_label = DiseaseProgression.valid_state('susceptible') \
-                if is_someone_infected \
-                else DiseaseProgression.valid_state('infected')
+            infection_status_label = 'susceptible' if is_someone_infected else 'infected'
 
             is_someone_infected = True
 

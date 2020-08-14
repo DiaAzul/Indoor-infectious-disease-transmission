@@ -2,9 +2,9 @@
 
 import networkx as nx
 
-from typing import List, Dict, Optional, Tuple
-from .ActivityBase import ActivityBase, Activity
-from .DecisionBase import DecisionBase, Decision
+from typing import List, Dict, Optional, Tuple, Type
+from HealthDES import ActivityType, Activity
+from HealthDES import DecisionType, Decision
 
 
 class Routing:
@@ -33,41 +33,41 @@ class Routing:
         self.G = nx.MultiDiGraph()
 
         # Dictionary of activities and reference to implementation classes
-        self.activities = {}
-        self.decisions = {}
+        self._activities: Dict[str, Activity] = {}
+        self._decisions: Dict[str, Decision] = {}
 
     # Methods to interact with the activity dictionary
     def register_activity(self,
                           activity_id: str,
-                          activity_class: ActivityBase,
+                          activity_class: Type[ActivityType],
                           **activity_kwargs: Dict) -> None:
 
-        if self.activities.get(activity_id) is None:
-            self.activities[activity_id] = Activity(activity_id, None, activity_class, activity_kwargs)
+        if self._activities.get(activity_id) is None:
+            self._activities[activity_id] = Activity(activity_id, None, activity_class, activity_kwargs)
         else:
             raise ValueError(f'{activity_id} is not a unique activity ID.')
 
     def get_registered_activities(self) -> Dict:
-        return self.activities
+        return self._activities
 
     def get_activity(self, activity_id: str) -> Optional[Activity]:
-        return self.activities.get(activity_id)
+        return self._activities.get(activity_id)
 
     # Methods to interact with the activity dictionary
     def register_decision(self, decision_id: str,
-                          decision_class: DecisionBase,
+                          decision_class: DecisionType,
                           **decision_kwargs: Dict) -> None:
 
-        if self.decisions.get(decision_id) is None:
-            self.decisions[decision_id] = Decision(decision_id, decision_class, decision_kwargs)
+        if self._decisions.get(decision_id) is None:
+            self._decisions[decision_id] = Decision(decision_id, decision_class, decision_kwargs)
         else:
             raise ValueError(f'{decision_id} is not a unique decision ID.')
 
     def get_registered_decisions(self) -> Dict:
-        return self.decisions
+        return self._decisions
 
     def get_decision(self, decision_id: str) -> Optional[Decision]:
-        return self.decisions.get(decision_id)
+        return self._decisions.get(decision_id)
 
     # Methods to interact with the routing graph
     def add_decision(self, decision_node: str) -> None:
@@ -91,14 +91,24 @@ class Routing:
         return (starting_node, ending_node, edge_key)
 
     # Methods to support routing person through the graph
-    def get_decision_from_activity_ref(self, activity_ref: Tuple[str, str, int]) -> Decision:
-        decision = self.decisions.get(activity_ref[1])
+    def get_decision_from_activity_ref(self, activity_ref: Tuple[str, str, int]) -> Optional[Decision]:
+        """Returns the decision that has to be taken once an activity completes
+
+        Args:
+            activity_ref (Tuple[str, str, int]): Edge co-ordinates for the activity within the graph
+
+        Returns:
+            Optional[Decision]: Returns a decision object, or None if there is no decision object for that node
+        """
+
+        decision = self._decisions.get(activity_ref[1])
+
         return decision
 
     def get_activities_from_decision_id(self, decision_id: str) -> List[Activity]:
         activity_list = []
-        for u, v, k, activity_name in self.G.out_edges([decision_id], keys=True, data='activity'):
-            activity = self.activities.get(activity_name)
+        for u, v, k, activity_name in self.G.out_edges(nbunch=decision_id, keys=True, data='activity'):
+            activity = self._activities.get(activity_name)
             # Need to make sure that we are not sharing resources between instances.
             activity_list.append(Activity(activity.id,
                                           (u, v, k),
