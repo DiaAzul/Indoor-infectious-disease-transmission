@@ -7,7 +7,7 @@ import yaml
 import sys
 
 from dataclasses import dataclass
-from .ActionQuery import ActionQuery
+from .AttrActions import AttrActions
 from HealthDES import Routing
 from HealthDES import Activity
 from typing import Generator, Optional, NewType, Any
@@ -21,7 +21,7 @@ class Status:
     received_message: str
 
 
-class PersonBase(ActionQuery):
+class PersonBase(AttrActions):
     """ Class to implement a person as a simpy discreate event simulation
 
         The person will have various characteristics which influences the simulation
@@ -99,7 +99,7 @@ class PersonBase(ActionQuery):
         # Routing is the list of environments that the person traverses
         self.starting_node_id = starting_node_id
 
-        # Initialise ActionQuery
+        # Initialise AttrActions
         super().__init__()
 
     def run(self) -> Generator[simpy.events.Event, Any, Any]:

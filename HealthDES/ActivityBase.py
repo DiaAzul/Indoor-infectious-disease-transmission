@@ -7,9 +7,9 @@ import sys
 from simpy import Store
 from typing import Callable, Union, Dict, Generator, Tuple, Optional, cast, TypeVar, Type
 from dataclasses import dataclass
-from HealthDES import ActionQueryType
+from HealthDES import AttrActionsType
 
-kwargTypes = Union[bool, bytes, str, int, float, complex, frozenset, Store, Callable, ActionQueryType]
+kwargTypes = Union[bool, bytes, str, int, float, complex, frozenset, Store, Callable, AttrActionsType]
 
 
 class ActivityBase():
@@ -64,7 +64,7 @@ class ActivityBase():
 
         self.time_interval = simulation_params.get('time_interval')
 
-        self.person: ActionQueryType = cast(ActionQueryType, kwargs.get('person'))
+        self.person: AttrActionsType = cast(AttrActionsType, kwargs.get('person'))
         self.message_to_activity: Store = cast(Store, kwargs.get('message_to_activity'))
         self.message_to_person: Store = cast(Store, kwargs.get('message_to_person'))
 

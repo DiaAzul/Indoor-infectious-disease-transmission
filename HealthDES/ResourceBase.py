@@ -1,10 +1,10 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 import itertools
-from .ActionQuery import ActionQuery
+from .AttrActions import AttrActions
 
 
-class ResourceBase(ActionQuery):
+class ResourceBase(AttrActions):
 
     # create a unique ID counter
     get_new_id = itertools.count()
