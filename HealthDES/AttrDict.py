@@ -49,7 +49,7 @@ class AttrDict(MutableMapping):
 
 @dataclass
 class StatusObject:
-    __slots__ = ['current_status', 'allowable_status', 'default']
+    __slots__ = ['current_status', 'allowable_status', 'default_status']
     current_status: AttrDict_VT
     allowable_status: FrozenSet[AttrDict_VT]
     default_status: AttrDict_VT
