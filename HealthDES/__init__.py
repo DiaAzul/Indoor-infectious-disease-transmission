@@ -1,7 +1,6 @@
 # Import public APIs for HealthDES
 # flake8: noqa
 
-from .AttrActions import AttrActionsType
 from .ActivityBase import ActivityBase, Activity, ActivityType
 from .DataCollection import DataCollection
 from .DecisionBase import DecisionBase, Decision, DecisionType
@@ -11,8 +10,7 @@ from .Routing import Routing
 from .SimulationBase import SimulationBase
 from .Check import CheckList, Check
 
-__all__ = ['AttrActionsType',
-           'ActivityBase',
+__all__ = ['ActivityBase',
            'ActivityType',
            'Activity',
            'Check',
