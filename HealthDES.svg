@@ -153,14 +153,14 @@
 <path fill="none" stroke="black" d="M336.745,-73.359C348.777,-63.3495 363.616,-51.0035 376.111,-40.6084"/>
 <polygon fill="#a13535" stroke="black" points="378.481,-43.1895 383.93,-34.1032 374.004,-37.8083 378.481,-43.1895"/>
 </g>
-<!-- HealthDES_StatusDict -->
-<g id="node12" class="node"><title>HealthDES_StatusDict</title><style>.edge>path:hover{stroke-width:8}</style>
+<!-- HealthDES_StateDict -->
+<g id="node12" class="node"><title>HealthDES_StateDict</title><style>.edge>path:hover{stroke-width:8}</style>
 <ellipse fill="#c24747" stroke="black" cx="48.0833" cy="-250.066" rx="48.1667" ry="21.4286"/>
 <text text-anchor="middle" x="48.0833" y="-253.066" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">HealthDES.</text>
-<text text-anchor="middle" x="48.0833" y="-242.066" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">StatusDict</text>
+<text text-anchor="middle" x="48.0833" y="-242.066" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">StateDict</text>
 </g>
-<!-- HealthDES_StatusDict&#45;&gt;HealthDES_AttrActions -->
-<g id="edge17" class="edge"><title>HealthDES_StatusDict&#45;&gt;HealthDES_AttrActions</title><style>.edge>path:hover{stroke-width:8}</style>
+<!-- HealthDES_StateDict&#45;&gt;HealthDES_AttrActions -->
+<g id="edge17" class="edge"><title>HealthDES_StateDict&#45;&gt;HealthDES_AttrActions</title><style>.edge>path:hover{stroke-width:8}</style>
 <path fill="none" stroke="black" d="M71.4841,-231.532C85.3794,-221.121 103.186,-207.779 118.336,-196.427"/>
 <polygon fill="#c24747" stroke="black" points="120.534,-199.154 126.438,-190.356 116.337,-193.552 120.534,-199.154"/>
 </g>

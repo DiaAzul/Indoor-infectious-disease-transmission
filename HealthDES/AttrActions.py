@@ -3,14 +3,23 @@
 import itertools
 from typing import NewType, Dict, Any, Callable
 from .AttrDict import AttrDict
-from .StatusDict import StatusDict
+from .StateDict import StateDict
 
 
-# DoActions and Attributes are not stored within the class but a separate dictionary.
-# This is to minimise the risk that dangerous code is injected into classes if at a
-# future point in time end users are allowed to configure additional attributes.
 class AttrActions:
+    """Inherited by person and resource base classes to provide a standardised interface for recording
+    attributes and methods. Attributes are held in a separately from the class dictionary so that access
+    can be controlled through a standardised interfaces.
 
+    Three types of attributes are available:
+    + *att[name]* - These are regular value attributes, however, they can only store immutable objects.
+    + *state[name]* - Attributes that can only hold a defined list of states.
+    + *do[name]* - Method attributes, which allow external access to class functions.
+
+    Raises:
+        ValueError: [description]
+        ValueError: [description]
+    """
     # create a unique ID counter
     get_new_id = itertools.count()
 
@@ -23,8 +32,9 @@ class AttrActions:
         # Dictionary of attributes (immutable types only)
         self.att: AttrDict = AttrDict()
         # Dictionary of statuses
-        self.status: StatusDict = StatusDict()
+        self.state: StateDict = StateDict()
 
+    # TODO: Check the error raise type - should it be key error?
     def add_do_action(self, action: str, do_function: Callable) -> None:
         if self._do_action.get(action, None) is None:
             self._do_action[action] = do_function

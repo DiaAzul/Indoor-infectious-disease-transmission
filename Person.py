@@ -38,9 +38,9 @@ class Person(PersonBase):
         super().__init__(simulation_params, starting_node_id)
 
         # Characteristics
-        self.status.add_status_attribute(key='infection_status',
-                                         allowable_status=frozenset(['susceptible', 'exposed', 'infected', 'recovered']),
-                                         default_status='susceptible')
+        self.state.add_status_attribute(key='infection_status',
+                                         allowable_states=frozenset(['susceptible', 'exposed', 'infected', 'recovered']),
+                                         default_state='susceptible')
 
         self.att['quanta_emission_rate'] = quanta_emission_rate if quanta_emission_rate else 147
         self.att['inhalation_rate'] = inhalation_rate if inhalation_rate else 0.54
@@ -64,11 +64,11 @@ class Person(PersonBase):
         self.att['cumulative_exposure'] += quanta_concentration
 
         if random.random() < self.infection_risk_instant(quanta_concentration):
-            if self.status['infection_status'] == 'susceptible':
+            if self.state['infection_status'] == 'susceptible':
                 self.log_infection()
                 self.dc.counter_increment('Infections')
 
-            self.status['infection_status'] = 'exposed'
+            self.state['infection_status'] = 'exposed'
 
     def infection_risk(self):
         """Determine risk that a patient is infected"""
