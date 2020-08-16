@@ -7,7 +7,7 @@ import sys
 from simpy import Store
 from typing import Callable, Union, Dict, Generator, Tuple, Optional, cast, TypeVar, Type
 from dataclasses import dataclass
-from HealthDES import AttrActionsType
+from .AttrActions import AttrActionsType
 
 kwargTypes = Union[bool, bytes, str, int, float, complex, frozenset, Store, Callable, AttrActionsType]
 

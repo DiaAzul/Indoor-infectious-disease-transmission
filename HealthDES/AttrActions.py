@@ -16,38 +16,69 @@ class AttrActions:
     + *state[name]* - Attributes that can only hold a defined list of states.
     + *do[name]* - Method attributes, which allow external access to class functions.
 
+    This class also generates a unique id within reach of the person and resource classes.
+
     Raises:
-        ValueError: [description]
-        ValueError: [description]
+        KeyError: If a new action is added with the same name as a previous action.
+        KeyError: If an action is not defined at the point it is called.
     """
     # create a unique ID counter
-    get_new_id = itertools.count()
+    _get_new_id = itertools.count()
 
     def __init__(self):
-
         # keep a record of units ID
-        self.id = next(AttrActions.get_new_id)
+        self.id = next(AttrActions._get_new_id)
         # Dictionary of 'do' actions
-        self._do_action: Dict[str, Any] = {}
+        self._do: Dict[str, Any] = {}
         # Dictionary of attributes (immutable types only)
         self.att: AttrDict = AttrDict()
-        # Dictionary of statuses
+        # Dictionary of States
         self.state: StateDict = StateDict()
 
-    # TODO: Check the error raise type - should it be key error?
-    def add_do_action(self, action: str, do_function: Callable) -> None:
-        if self._do_action.get(action, None) is None:
-            self._do_action[action] = do_function
-        else:
-            raise ValueError(f'Action: {action} already defined')
+    def add_do_action(self, action: str, do_action: Callable) -> None:
+        """Adds a callable method to the 'do' dictionary of actions which can be called.
 
-    def do(self, action: str, **kwargs: str) -> None:
-        """ Perform an action on the person """
-        action_function = self._do_action.get(action, None)
-        if action_function:
+        Args:
+            action: Name of the action.
+            do_function: Callable method.
+
+        Raises:
+            KeyError: If the method is already in the dictionary.
+        """
+        if self._do.get(action) is not None:
+            raise KeyError(f'Action: {action} already defined')
+        self._do[action] = do_action
+
+    def do(self, action: str, **kwargs: Any) -> None:
+        """Calls a method on the person or resource with a list of named arguments.
+
+        Args:
+            action: Name of the action.
+            kwargs: Dictionary of keyword arguments.
+
+        Raises:
+            KeyError: If the method doesn't exist in the dictionary.
+        """
+
+        try:
+            action_function = self._do[action]
             action_function(**kwargs)
-        else:
-            raise ValueError(f'Received an invalid action: {action}')
+        except KeyError:
+            raise KeyError(f'Received an invalid action: {action}')
+
+    def delete_action(self, action: str):
+        """Delete an action from the dictionary
+
+        Args:
+            action: Name of the action.
+
+        Raises:
+            KeyError: If the action doesn't exist in the dictionary.
+        """        
+        try:
+            self._do[action] = None
+        except KeyError:
+            raise KeyError(f'{action} isn''t a defined action.')
 
 
 AttrActionsType = NewType('AttrActionsType', AttrActions)

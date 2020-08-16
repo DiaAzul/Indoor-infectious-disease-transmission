@@ -1,15 +1,6 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
-from typing import (
-    TYPE_CHECKING,
-    ClassVar,
-    ContextManager,
-    Generic,
-    MutableSequence,
-    Optional,
-    Type,
-    TypeVar,
-    Union,
-)
+
+from typing import Union
 
 
 class Check:
@@ -18,7 +9,7 @@ class Check:
     In Data Science analysis it is more important to ensure that data is correct than code is fast.
     Therefore, a greater degree of parameter checking may be appropriate to ensure that parameters
     meet defined criteria. This Class contains common checks that are applied to base types (int,
-     float, string) to confirm data integrity.
+    float, string) to confirm data integrity.
     """
     @staticmethod
     def is_equal_to_zero(x: Union[int, float]) -> None:

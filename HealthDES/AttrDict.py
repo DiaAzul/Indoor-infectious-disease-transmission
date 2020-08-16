@@ -15,6 +15,7 @@ AttrDict_VT = Union[Optional[bool],
 
 
 class AttrDict(MutableMapping):
+    """Dictionary of immutable attributes."""
 
     valid_types: List[Type] = [bool, bytes, str, int, float, complex, frozenset]
 
