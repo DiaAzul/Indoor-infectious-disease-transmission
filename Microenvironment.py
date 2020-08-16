@@ -4,10 +4,10 @@ import simpy
 import simpy.core
 import math
 
-from HealthDES import Check
+from HealthDES import ResourceBase, Check
 
 
-class Microenvironment:
+class Microenvironment(ResourceBase):
     """ Class to implement a microenvironment as a simpy discreate event simulation """
 
     def __init__(self,
@@ -33,30 +33,31 @@ class Microenvironment:
             Concentration is quanta per m^3 (for initial concentration and returned results)
             Emmission rate is quanta per hour
         """
-        self.env = simulation_params.get('simpy_env', None)
-        self.dc = simulation_params.get('data_collector', None)
-        self.time_interval = simulation_params.get('time_interval', None)
+
+        super().__init__(simulation_params)
+
+        self.attr['time_interval'] = simulation_params.get('time_interval', None)
 
         # Microenvironment characteristics
         Check.is_greater_than_zero(volume)
         Check.is_greater_than_zero(air_exchange_rate)
 
-        self.environment_name = environment_name
-        self.volume = volume
-        self.air_exchange_rate = air_exchange_rate
+        self.attr['environment_name'] = environment_name
+        self.attr['volume'] = volume
+        self.attr['air_exchange_rate'] = air_exchange_rate
 
         # Initialise the building environment
-        self.quanta_in_microenvironment = 0.0
+        self.attr['quanta_in_microenvironment'] = 0.0
 
         # Set limits to the visitor capacity in the microenvironment managed
         # through a simpy resource
         if capacity is None:
-            self.capacity = simpy.core.Infinity
+            self.attr['capacity'] = simpy.core.Infinity
         else:
             Check.is_greater_than_zero(capacity)
-            self.capacity = capacity
+            self.attr['capacity'] = capacity
 
-        self.microenvironment = simpy.Resource(self.env, self.capacity)
+        self.microenvironment = simpy.Resource(self.env, self.attr['capacity'])
 
         # Set up periodic reporting
         self.initialise_periodic_reporting()
@@ -67,7 +68,7 @@ class Microenvironment:
         while True:
 
             # Reduce quanta concentration over time
-            self.quanta_in_microenvironment *= math.exp(-self.air_exchange_rate * self.time_interval)
+            self.attr['quanta_in_microenvironment'] *= math.exp(-1 * self.attr['air_exchange_rate'] * self.attr['time_interval'])
 
             yield self.env.timeout(1)
 
@@ -107,16 +108,16 @@ class Microenvironment:
             quanta              The number of quanta to add to the microenvironment
         """
         Check.is_greater_than_or_equal_to_zero(quanta)
-        self.quanta_in_microenvironment += quanta
+        self.attr['quanta_in_microenvironment'] += quanta
 
     def get_quanta_concentration(self):
         """ Callback from person class to get the quanta concentration """
-        return self.quanta_in_microenvironment / self.volume
+        return self.attr['quanta_in_microenvironment'] / self.attr['volume']
 
     # Periodic reporting
     def initialise_periodic_reporting(self):
         """ Initialise periodic reporting """
-        data_set_name = f'Quanta concentration {self.environment_name}'
+        data_set_name = f"Quanta concentration {self.attr['environment_name']}"
         callback = self.periodic_reporting_callback
         periods = 1
 
@@ -124,4 +125,4 @@ class Microenvironment:
 
     def periodic_reporting_callback(self):
         """ Callback to collect data for periodic reporting """
-        return {f'Quanta concentration {self.environment_name}': self.get_quanta_concentration()}
+        return {f"Quanta concentration {self.attr['environment_name']}": self.get_quanta_concentration()}

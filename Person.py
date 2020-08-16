@@ -42,14 +42,14 @@ class Person(PersonBase):
                                          allowable_states=frozenset(['susceptible', 'exposed', 'infected', 'recovered']),
                                          default_state='susceptible')
 
-        self.att['quanta_emission_rate'] = quanta_emission_rate if quanta_emission_rate else 147
-        self.att['inhalation_rate'] = inhalation_rate if inhalation_rate else 0.54
-        self.att['cumulative_exposure'] = 0.0
+        self.attr['quanta_emission_rate'] = quanta_emission_rate if quanta_emission_rate else 147
+        self.attr['inhalation_rate'] = inhalation_rate if inhalation_rate else 0.54
+        self.attr['cumulative_exposure'] = 0.0
 
-        self.att['infected'] = False
-        self.att['person_type'] = person_type
-        self.att['age'] = 50
-        self.att['sex'] = 'female'
+        self.attr['infected'] = False
+        self.attr['person_type'] = person_type
+        self.attr['age'] = 50
+        self.attr['sex'] = 'female'
 
         self.add_do_action('expose_person_to_quanta', self.expose_person_to_quanta)
         self.add_do_action('infection_risk', self.infection_risk)
@@ -61,7 +61,7 @@ class Person(PersonBase):
         Args:
             quanta_concentration (number): The concentration of infectious material in the environment in quanta
         """
-        self.att['cumulative_exposure'] += quanta_concentration
+        self.attr['cumulative_exposure'] += quanta_concentration
 
         if random.random() < self.infection_risk_instant(quanta_concentration):
             if self.state['infection_status'] == 'susceptible':
@@ -72,7 +72,7 @@ class Person(PersonBase):
 
     def infection_risk(self):
         """Determine risk that a patient is infected"""
-        return 1 - math.exp(-1 * self.att['inhalation_rate'] * self.time_interval * self.att['cumulative_exposure'])
+        return 1 - math.exp(-1 * self.attr['inhalation_rate'] * self.time_interval * self.attr['cumulative_exposure'])
 
     def infection_risk_instant(self, quanta_concentration):
         """Return the probability the person will become infections
@@ -83,7 +83,7 @@ class Person(PersonBase):
         Returns:
             number: Probability that the person will become infected.
         """
-        return 1 - math.exp(-1 * self.att['inhalation_rate'] * self.time_interval * quanta_concentration)
+        return 1 - math.exp(-1 * self.attr['inhalation_rate'] * self.time_interval * quanta_concentration)
 
     def log_infection_risk(self):
         """Log visitors infection risk"""

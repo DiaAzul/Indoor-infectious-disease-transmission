@@ -31,7 +31,7 @@ class AttrActions:
         # Dictionary of 'do' actions
         self._do: Dict[str, Any] = {}
         # Dictionary of attributes (immutable types only)
-        self.att: AttrDict = AttrDict()
+        self.attr: AttrDict = AttrDict()
         # Dictionary of States
         self.state: StateDict = StateDict()
 
@@ -46,7 +46,7 @@ class AttrActions:
             KeyError: If the method is already in the dictionary.
         """
         if self._do.get(action) is not None:
-            raise KeyError(f'Action: {action} already defined')
+            raise KeyError(f'Action {action} already defined')
         self._do[action] = do_action
 
     def do(self, action: str, **kwargs: Any) -> None:
@@ -74,9 +74,9 @@ class AttrActions:
 
         Raises:
             KeyError: If the action doesn't exist in the dictionary.
-        """        
+        """
         try:
-            self._do[action] = None
+            del self._do[action]
         except KeyError:
             raise KeyError(f'{action} isn''t a defined action.')
 
