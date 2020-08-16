@@ -25,12 +25,12 @@ class Simulation(SimulationBase):
 
     The simulation class is the main controlling class for the simulation and
     is responsible for:
-        * Creating the simpy environment
-        * Creating the data collection environment
-        * Creating individual microenvironments
-        * Generating people
-        * Defining the routing for each person
-        * Starting and stopping the model
+    * Creating the simpy environment
+    * Creating the data collection environment
+    * Creating individual microenvironments
+    * Generating people
+    * Defining the routing for each person
+    * Starting and stopping the model
      """
 
     # TODO: Move simulation_run to run() method call, and implement a reset simulation.

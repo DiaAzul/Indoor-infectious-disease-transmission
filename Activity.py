@@ -69,14 +69,14 @@ class Visitor_activity(ActivityBase):
     def infected_visitor(self, callback_add_quanta, request_to_leave, periods):
         """Callback from microenvironment for an infected person to generate quanta
 
-            Arguments:
-            callback_add_quanta             Callback to microenvironment to add quanta
-            request_to_leave                Event notification to let microenvironment know we
-                                            wish to leave to allow clean up before existing the
-                                            microenvironment.
-            periods                         Number of periods person in the microenvironment
-         """
+        Args:
+            callback_add_quanta: Callback to microenvironment to add quanta
+            request_to_leave: Event notification to let microenvironment know we wish to leave to allow clean up before existing the microenvironment.
+            periods: Number of periods person in the microenvironment
 
+        Yields:
+            Message: Periodic or end of period notification
+        """
         end_trigger = self.env.timeout(periods, value='end')
 
         while True:
@@ -96,12 +96,13 @@ class Visitor_activity(ActivityBase):
     def susceptible_visitor(self, callback_quanta_concentration, request_to_leave, periods):
         """Callback from microenvironment for a susceptible person to calculate exposure
 
-            Arguments:
-            callback_quanta_concentration   callback to microenvironment to get quanta_concentration
-            request_to_leave                Event notification to let microenvironment know we wish
-                                            to leave to allow clean up before existing the
-                                            microenvironment.
-            periods                         Number of period that person in the microenvironment
+        Args:
+            callback_quanta_concentration: callback to microenvironment to get quanta_concentration
+            request_to_leave: Event notification to let microenvironment know we wish to leave to allow clean up before existing the microenvironment.
+            periods: Number of period that person in the microenvironment
+
+        Yields:
+            Message: Periodic or end of period notification
         """
         end_trigger = self.env.timeout(periods, value='end')
 
