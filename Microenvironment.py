@@ -1,6 +1,7 @@
 """ Python library to model the spread of infectious diseases within a microenvironment """
 
 import simpy
+import simpy.core
 import math
 
 from HealthDES import Check

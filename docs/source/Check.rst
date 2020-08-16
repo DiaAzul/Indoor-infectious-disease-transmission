@@ -1,7 +1,8 @@
-Check module
-============
+=====================================================
+``Check`` --- HealthDES functions for checking inputs
+=====================================================
 
-.. automodule:: Check
+.. automodule:: HealthDES.Check
    :members:
    :undoc-members:
    :show-inheritance:

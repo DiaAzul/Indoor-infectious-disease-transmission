@@ -1,5 +1,6 @@
-run module
-==========
+==================
+Run the simulation
+==================
 
 .. automodule:: run
    :members:

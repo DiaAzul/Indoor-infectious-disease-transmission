@@ -1,7 +1,8 @@
-PersonBase module
-=================
+====================================================
+``PersonBase`` --- HealthDES base class for a person
+====================================================
 
-.. automodule:: PersonBase
+.. automodule:: HealthDES.PersonBase
    :members:
    :undoc-members:
    :show-inheritance:

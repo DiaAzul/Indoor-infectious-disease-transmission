@@ -1,7 +1,8 @@
-Routing module
-==============
+================================================
+``Routing`` --- HealthDES base class for routing
+================================================
 
-.. automodule:: Routing
+.. automodule:: HealthDES.Routing
    :members:
    :undoc-members:
    :show-inheritance:

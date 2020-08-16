@@ -17,8 +17,8 @@ Infectious diseases are transmitted from an infectious person to a susceptible p
    :caption: Contents:
 
    SimulationModules
-   HealthDESmodules
-
+   HealthDES
+   
 
 
 Indices and tables
