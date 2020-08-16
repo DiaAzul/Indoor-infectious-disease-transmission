@@ -1,5 +1,6 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
+from dataclasses import dataclass
 import simpy
 import pandas as pd
 
@@ -9,17 +10,26 @@ from HealthDES import Routing
 from typing import List, Any, Optional
 
 
+# TODO: Work out how to distribute global environment parameters.
+@dataclass
+class SimEnv:
+    __slots__ = ['env', 'dc', 'routing']
+    env: simpy.Environment
+    dc: DataCollection
+    routing: Routing
+
+
 class SimulationBase:
     """ Class to implement a simulation using simpy discreate event simulation
 
     The simulation class is the main controlling class for the simulation and
     is responsible for:
-        * Creating the simpy environment
-        * Creating the data collection environment
-        * Creating individual microenvironments
-        * Generating people
-        * Defining the routing for each person
-        * Starting and stopping the model
+    * Creating the simpy environment
+    * Creating the data collection environment
+    * Creating individual microenvironments
+    * Generating people
+    * Defining the routing for each person
+    * Starting and stopping the model
      """
 
     # TODO: Move simulation_run to run() method call, and implement a reset simulation.
@@ -46,6 +56,8 @@ class SimulationBase:
                                   'data_collector': self.dc,
                                   'routing': self.routing
                                   }
+        # REPLACES THE ABOVE...maybe
+        self.simenv = SimEnv(self.env, self.dc, self.routing)
 
         # call specific initialisations
         self.initialise(**kwargs)
