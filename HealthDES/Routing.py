@@ -2,9 +2,9 @@
 
 import networkx as nx
 
-from typing import List, Dict, Optional, Tuple, Type, TypeVar
-from .ActivityBase import ActivityType, Activity
-from .DecisionBase import DecisionType, Decision
+from typing import List, Dict, Optional, Tuple, Type
+from .ActivityBase import ActivityBase, Activity
+from .DecisionBase import DecisionBase, Decision
 
 
 class Routing():
@@ -39,7 +39,7 @@ class Routing():
     # Methods to interact with the activity dictionary
     def register_activity(self,
                           activity_id: str,
-                          activity_class: Type[ActivityType],
+                          activity_class: Type[ActivityBase],
                           **activity_kwargs: Dict) -> None:
 
         if self._activities.get(activity_id) is None:
@@ -55,7 +55,7 @@ class Routing():
 
     # Methods to interact with the activity dictionary
     def register_decision(self, decision_id: str,
-                          decision_class: DecisionType,
+                          decision_class: DecisionBase,
                           **decision_kwargs: Dict) -> None:
 
         if self._decisions.get(decision_id) is None:
@@ -116,6 +116,3 @@ class Routing():
                                           activity.kwargs.copy()))
 
         return activity_list
-
-
-RoutingType = TypeVar('RoutingType', bound=Routing)

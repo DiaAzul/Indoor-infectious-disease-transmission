@@ -2,7 +2,7 @@
 
 # import simpy
 from .ActivityBase import Activity
-from typing import Dict, NewType
+from typing import Dict
 from dataclasses import dataclass
 
 
@@ -23,6 +23,3 @@ class Decision:
     id: str
     decision_class: DecisionBase
     kwargs: Dict
-
-
-DecisionType = NewType('DecisionType', DecisionBase)

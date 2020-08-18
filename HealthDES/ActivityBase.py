@@ -5,7 +5,7 @@ import yaml
 import inspect
 import sys
 from simpy import Store
-from typing import Callable, Union, Dict, Generator, Tuple, Optional, cast, TypeVar, Type
+from typing import Callable, Union, Dict, Generator, Tuple, Optional, cast, Type
 from dataclasses import dataclass
 from .AttrActions import AttrActionsType
 from .SimulationEnvironment import SimEnv
@@ -68,7 +68,7 @@ class ActivityBase():
         raise NotImplementedError
 
     @classmethod
-    def pack_parameters(cls: Type[ActivityType], **kwargs: kwargTypes) -> Tuple[Type[ActivityType], Dict[str, kwargTypes]]:
+    def pack_parameters(cls: Type[ActivityBase], **kwargs: kwargTypes) -> Tuple[Type[ActivityBase], Dict[str, kwargTypes]]:
         raise NotImplementedError
 
     def run(self) -> Generator[str, None, None]:
@@ -155,6 +155,3 @@ class Activity:
     graph_ref: Optional[Tuple[str, str, int]]
     activity_class: Optional[Type[ActivityBase]]
     kwargs: Optional[Dict]
-
-
-ActivityType = TypeVar('ActivityType', bound=ActivityBase)
