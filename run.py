@@ -11,8 +11,9 @@ if __name__ == "__main__":
     max_arrivals = None
     quanta_emission_rate = 147
     inhalation_rate = 0.54
+    time_interval = 1 / 60
 
-    simulation = Simulation(simulation_name, simulation_run, microenvironment=simulation_name, periods=periods)
+    simulation = Simulation(simulation_name, simulation_run, time_interval, microenvironment=simulation_name, periods=periods)
 
     simulation.run(arrivals_per_hour=arrivals_per_hour,
                    quanta_emission_rate=quanta_emission_rate,

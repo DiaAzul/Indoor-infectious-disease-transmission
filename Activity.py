@@ -1,10 +1,13 @@
 """ Python library to model the spread of infectious diseases within a microenvironment """
 
-from HealthDES import ActivityBase, ActivityType
-from typing import Tuple, Dict, Any, Type
+from __future__ import annotations
+from HealthDES.ActivityBase import kwargTypes
+from HealthDES import ActivityBase
+from Microenvironment import Microenvironment
+from typing import Tuple, Dict, Type, cast
 
 
-class Visitor_activity(ActivityBase):
+class VisitorActivity(ActivityBase):
     """Person's activity within the system, models interaction between people and environment """
 
     # The following pair of methods define the parametes passed to the activity.
@@ -14,13 +17,13 @@ class Visitor_activity(ActivityBase):
     # the parameters are read from the activity dictionary and used to create an
     # actual instance of the activity prior to it being called (started).
 
-    def unpack_parameters(self, **kwargs: Any) -> None:
+    def unpack_parameters(self, **kwargs: kwargTypes) -> None:
         """Unpack the parameter list and store in local instance variables."""
-        self.microenvironment = kwargs['microenvironment']
-        self.duration: int = kwargs['duration']
+        self.microenvironment = cast(Microenvironment, kwargs['microenvironment'])
+        self.duration: int = cast(int, kwargs['duration'])
 
     @classmethod
-    def pack_parameters(cls, microenvironment, duration) -> Tuple[Type[ActivityType], Dict[str, Any]]:
+    def pack_parameters(cls, microenvironment, duration) -> Tuple[Type[VisitorActivity], Dict[str, kwargTypes]]:
         """Pack parameters for the activity into a dictionary.
 
         Arguments:
@@ -32,9 +35,9 @@ class Visitor_activity(ActivityBase):
                                         instantiate an instance
         """
         # TODO: Rename as attributes and use existing mechanisms for setting and getting
-        parameters: Dict[str, Any] = {'microenvironment': microenvironment,
-                                      'duration': duration
-                                      }
+        parameters: Dict[str, kwargTypes] = {'microenvironment': microenvironment,
+                                             'duration': duration
+                                             }
 
         return (cls, parameters)
 
@@ -44,13 +47,13 @@ class Visitor_activity(ActivityBase):
 
     def do_activity(self):
         # Wait in the shop
-        self.log_visitor_activity(f'Visitor {self.person.id} entered.')
-        self.dc.counter_increment('Total visitors')
+        self.log_VisitorActivity(f'Visitor {self.person.id} entered.')
+        self.sim_env.dc.counter_increment('Total visitors')
 
-        person_request_to_leave = self.env.event()
+        person_request_to_leave = self.sim_env.env.event()
 
         if self.person.state['infection_status'] == 'infected':
-            self.env.process(self.infected_visitor(
+            self.sim_env.env.process(self.infected_visitor(
                 self.microenvironment.add_quanta_to_microenvironment,
                 person_request_to_leave,
                 self.duration))
@@ -58,13 +61,13 @@ class Visitor_activity(ActivityBase):
 
         elif self.person.state['infection_status'] == 'susceptible':
 
-            self.env.process(self.susceptible_visitor(
+            self.sim_env.env.process(self.susceptible_visitor(
                 self.microenvironment.get_quanta_concentration,
                 person_request_to_leave,
                 self.duration))
             yield person_request_to_leave
 
-        self.log_visitor_activity(f'Visitor {self.person.id} left.')
+        self.log_VisitorActivity(f'Visitor {self.person.id} left.')
 
     def infected_visitor(self, callback_add_quanta, request_to_leave, periods):
         """Callback from microenvironment for an infected person to generate quanta
@@ -77,15 +80,15 @@ class Visitor_activity(ActivityBase):
         Yields:
             Message: Periodic or end of period notification
         """
-        end_trigger = self.env.timeout(periods, value='end')
+        end_trigger = self.sim_env.env.timeout(periods, value='end')
 
         while True:
-            period_trigger = self.env.timeout(1, value='periodic')
+            period_trigger = self.sim_env.env.timeout(1, value='periodic')
 
             # Add quanta to the environment
             quanta_emission_rate = self.person.attr['quanta_emission_rate']
             self.microenvironment.add_quanta_to_microenvironment(
-                quanta_emission_rate * self.time_interval)
+                quanta_emission_rate * self.sim_env.time_interval)
 
             fired_trigger = yield period_trigger | end_trigger
             if fired_trigger == {end_trigger: 'end'}:
@@ -104,10 +107,10 @@ class Visitor_activity(ActivityBase):
         Yields:
             Message: Periodic or end of period notification
         """
-        end_trigger = self.env.timeout(periods, value='end')
+        end_trigger = self.sim_env.env.timeout(periods, value='end')
 
         while True:
-            period_trigger = self.env.timeout(1, value='periodic')
+            period_trigger = self.sim_env.env.timeout(1, value='periodic')
 
             # Assess exposure
             quanta_concentration = self.microenvironment.get_quanta_concentration()
@@ -119,14 +122,14 @@ class Visitor_activity(ActivityBase):
 
         request_to_leave.succeed()
 
-    def log_visitor_activity(self, activity):
+    def log_VisitorActivity(self, activity):
         """Log visitor activity within the process visitor process
 
             Arguments:
             activity                  String describing the activity that has occurred.
         """
 
-        self.dc.log_reporting('Visitor activity',
-                              {'queue': self.microenvironment.get_queue_length(),
-                               'visitors': self.microenvironment.get_active_users(),
-                               'activity': activity})
+        self.sim_env.dc.log_reporting('Visitor activity',
+                                      {'queue': self.microenvironment.get_queue_length(),
+                                       'visitors': self.microenvironment.get_active_users(),
+                                       'activity': activity})

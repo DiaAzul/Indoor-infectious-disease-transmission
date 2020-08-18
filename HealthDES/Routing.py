@@ -2,12 +2,12 @@
 
 import networkx as nx
 
-from typing import List, Dict, Optional, Tuple, Type
-from HealthDES import ActivityType, Activity
-from HealthDES import DecisionType, Decision
+from typing import List, Dict, Optional, Tuple, Type, TypeVar
+from .ActivityBase import ActivityType, Activity
+from .DecisionBase import DecisionType, Decision
 
 
-class Routing:
+class Routing():
     """Create a routing graph and than route people through the system
 
     The system is represented as a graph. Each node represents a decision point and each
@@ -47,7 +47,7 @@ class Routing:
         else:
             raise ValueError(f'{activity_id} is not a unique activity ID.')
 
-    def get_registered_activities(self) -> Dict:
+    def get_registered_activities(self) -> Optional[Dict[str, Activity]]:
         return self._activities
 
     def get_activity(self, activity_id: str) -> Optional[Activity]:
@@ -63,7 +63,7 @@ class Routing:
         else:
             raise ValueError(f'{decision_id} is not a unique decision ID.')
 
-    def get_registered_decisions(self) -> Dict:
+    def get_registered_decisions(self) -> Optional[Dict[str, Decision]]:
         return self._decisions
 
     def get_decision(self, decision_id: str) -> Optional[Decision]:
@@ -105,7 +105,7 @@ class Routing:
 
         return decision
 
-    def get_activities_from_decision_id(self, decision_id: str) -> List[Activity]:
+    def get_activities_from_decision_id(self, decision_id: str) -> Optional[List[Activity]]:
         activity_list = []
         for u, v, k, activity_name in self.G.out_edges(nbunch=decision_id, keys=True, data='activity'):  # type: ignore : Problem with NetworkX tuple count
             activity = self._activities.get(activity_name)
@@ -116,3 +116,6 @@ class Routing:
                                           activity.kwargs.copy()))
 
         return activity_list
+
+
+RoutingType = TypeVar('RoutingType', bound=Routing)

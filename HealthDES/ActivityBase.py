@@ -1,6 +1,6 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
-# from __future__ import annotations
+from __future__ import annotations
 import yaml
 import inspect
 import sys
@@ -8,6 +8,8 @@ from simpy import Store
 from typing import Callable, Union, Dict, Generator, Tuple, Optional, cast, TypeVar, Type
 from dataclasses import dataclass
 from .AttrActions import AttrActionsType
+from .SimulationEnvironment import SimEnv
+
 
 kwargTypes = Union[bool, bytes, str, int, float, complex, frozenset, Store, Callable, AttrActionsType]
 
@@ -52,17 +54,9 @@ class ActivityBase():
         success_message: ended
     """), Loader=yaml.SafeLoader)
 
-    def __init__(self, simulation_params, **kwargs: kwargTypes) -> None:
-        """Create a new activity
+    def __init__(self, sim_env: SimEnv, **kwargs: kwargTypes) -> None:
 
-        Arguments:
-            simulation_params {dictionary} -- keyword arguments for the simulation
-            kwargs {dictionary} -- Keyword arguments for the activity
-        """
-        self.env = simulation_params.get('simpy_env')
-        self.dc = simulation_params.get('data_collector')
-
-        self.time_interval = simulation_params.get('time_interval')
+        self.sim_env = sim_env
 
         self.person: AttrActionsType = cast(AttrActionsType, kwargs.get('person'))
         self.message_to_activity: Store = cast(Store, kwargs.get('message_to_activity'))
@@ -70,8 +64,12 @@ class ActivityBase():
 
         self.unpack_parameters(**kwargs)
 
-    def unpack_parameters(self, **kwargs: str) -> None:
-        pass
+    def unpack_parameters(self, **kwargs: kwargTypes) -> None:
+        raise NotImplementedError
+
+    @classmethod
+    def pack_parameters(cls: Type[ActivityType], **kwargs: kwargTypes) -> Tuple[Type[ActivityType], Dict[str, kwargTypes]]:
+        raise NotImplementedError
 
     def run(self) -> Generator[str, None, None]:
         """Run the event loop for the activity

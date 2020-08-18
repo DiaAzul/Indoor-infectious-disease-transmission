@@ -1,22 +1,13 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
-from dataclasses import dataclass
 import simpy
 import pandas as pd
 
 # Import local libraries
 from HealthDES import DataCollection
 from HealthDES import Routing
-from typing import List, Any, Optional
-
-
-# TODO: Work out how to distribute global environment parameters.
-@dataclass
-class SimEnv:
-    __slots__ = ['env', 'dc', 'routing']
-    env: simpy.Environment
-    dc: DataCollection
-    routing: Routing
+from typing import List, Any, Optional, Union
+from .SimulationEnvironment import SimEnv
 
 
 class SimulationBase:
@@ -32,10 +23,10 @@ class SimulationBase:
     * Starting and stopping the model
      """
 
-    # TODO: Move simulation_run to run() method call, and implement a reset simulation.
     def __init__(self,
-                 simulation_name: Optional[str] = None,
-                 simulation_run: Optional[str] = None,
+                 simulation_name: str,
+                 simulation_run: str,
+                 time_interval: float,
                  **kwargs: Optional[Any]
                  ) -> None:
         """Initialise the simulation.
@@ -45,19 +36,17 @@ class SimulationBase:
             simulation_run {string} -- The sequence number for this run of the
                                        simulation (default: {None})
         """
+
         # Create a simpy environment
-        self.env = simpy.Environment()
-        self.dc = DataCollection(self.env, simulation_name, simulation_run)
+        env = simpy.Environment()
+        dc = DataCollection(env, simulation_name, simulation_run)
 
-        # Routing of people through the model, nodes are decisions, edges are activities
-        self.routing = Routing()
-
-        self.simulation_params = {'simpy_env': self.env,
-                                  'data_collector': self.dc,
-                                  'routing': self.routing
-                                  }
-        # REPLACES THE ABOVE...maybe
-        self.simenv = SimEnv(self.env, self.dc, self.routing)
+        self.sim_env = SimEnv(simulation_name=simulation_name,
+                              simulation_run=simulation_run,
+                              env=env,
+                              dc=dc,
+                              routing=Routing(),
+                              time_interval=time_interval)  # TODO: TIME_INTERVAL BLOCKER
 
         # call specific initialisations
         self.initialise(**kwargs)
@@ -65,8 +54,9 @@ class SimulationBase:
     def initialise(self) -> None:
         pass
 
-    def add_simulation_param(self, param_name: str, param: Any) -> None:
-        self.simulation_params[param_name] = param
+    # TODO: Do we need to get rid of this?
+    # def add_simulation_param(self, param_name: str, param: Any) -> None:
+    #     self.simulation_params[param_name] = param
 
     def get_list_of_reports(self) -> List[str]:
         """Get the list of reports.
@@ -75,9 +65,9 @@ class SimulationBase:
             list of strings -- List of reports.
         """
 
-        return self.dc.get_list_of_reports()
+        return self.sim_env.dc.get_list_of_reports()
 
-    def get_results(self, data_set_name: str) -> pd.DataFrame:
+    def get_results(self, data_set_name: str) -> Optional[pd.DataFrame]:
         """Return stored report as a pandas dataFrame.
 
         Arguments:
@@ -86,9 +76,9 @@ class SimulationBase:
         Returns:
             pandas dataFrame -- dataFrame containing the results
         """
-        return self.dc.get_results(data_set_name)
+        return self.sim_env.dc.get_results(data_set_name)
 
-    def get_counter(self, data_set_name: str) -> int:
+    def get_counter(self, data_set_name: str) -> Optional[Union[int, float]]:
         """Return stored value of a counter
 
         Arguments:
@@ -97,4 +87,4 @@ class SimulationBase:
         Returns:
             number -- value of the counter
         """
-        return self.dc.get_counter(data_set_name)
+        return self.sim_env.dc.get_counter(data_set_name)

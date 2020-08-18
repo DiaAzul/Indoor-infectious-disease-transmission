@@ -8,9 +8,9 @@ import sys
 
 from dataclasses import dataclass
 from .AttrActions import AttrActions
-from HealthDES import Routing
-from HealthDES import Activity
+from .ActivityBase import Activity
 from typing import Generator, Optional, NewType, Any
+from .SimulationEnvironment import SimEnv
 
 
 @dataclass
@@ -78,23 +78,10 @@ class PersonBase(AttrActions):
         next_state: resources_seized_a
     """), Loader=yaml.SafeLoader)
 
-    def __init__(self, simulation_params, starting_node_id: str) -> None:
-        """Establish the persons characteristics, this will be specific to each model
+    def __init__(self, sim_env: SimEnv, starting_node_id: str) -> None:
 
-        Arguments:
-            simulation_params {Obj} -- Dictionary of parameters for the simulation
-                                       (see simulation.py)
-
-        Keyword Arguments:
-            person_type {string} -- Type of person within the model e.g visitor, staff
-                                    (default: {None})
-        """
         # import simulation parameters
-        self.simulation_params = simulation_params
-        self.env = simulation_params.get('simpy_env', None)
-        self.dc = simulation_params.get('data_collector', None)
-        self.routing: Routing = simulation_params.get('routing', None)
-        self.time_interval = simulation_params.get('time_interval', None)
+        self.sim_env = sim_env
 
         # Routing is the list of environments that the person traverses
         self.starting_node_id = starting_node_id
@@ -194,8 +181,8 @@ class PersonBase(AttrActions):
         return status
 
     def run_activity(self, activity):
-        activity_class = activity.activity_class(self.simulation_params, **activity.kwargs)
-        self.env.process(activity_class.run())
+        activity_class = activity.activity_class(self.sim_env, **activity.kwargs)
+        self.sim_env.env.process(activity_class.run())
 
     # TODO: Still need to implement decision making logic
     def get_next_node(self, status: Status) -> Status:
@@ -204,17 +191,17 @@ class PersonBase(AttrActions):
             status.received_message = 'branch_to_end'
         else:
             # TODO: Need to manage situation where there is no decision.
-            decision = self.routing.get_decision_from_activity_ref(status.activity_a.kwargs['graph_activity_ref'])
+            decision = self.sim_env.routing.get_decision_from_activity_ref(status.activity_a.kwargs['graph_activity_ref'])
             status.activity_b = self.get_next_activity(decision.id)
             status.received_message = 'initialise_b'
 
         return status
 
     def get_next_activity(self, decision_id: str) -> Activity:
-        activity_list = self.routing.get_activities_from_decision_id(decision_id)
+        activity_list = self.sim_env.routing.get_activities_from_decision_id(decision_id)
 
         # TODO: If more than one activity need to implement decision node
-        if len(activity_list) != 1:
+        if activity_list is None or len(activity_list) != 1:
             raise ValueError('Starting node must have only one next activity')
 
         activity: Activity = activity_list[0]
@@ -223,8 +210,8 @@ class PersonBase(AttrActions):
         activity.kwargs['person'] = self
 
         # Create two communication pipes for bi-directional communication with activity
-        activity.kwargs['message_to_activity'] = simpy.Store(self.env)
-        activity.kwargs['message_to_person'] = simpy.Store(self.env)
+        activity.kwargs['message_to_activity'] = simpy.Store(self.sim_env.env)
+        activity.kwargs['message_to_person'] = simpy.Store(self.sim_env.env)
 
         return activity
 

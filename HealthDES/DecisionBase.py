@@ -1,7 +1,7 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 # import simpy
-from HealthDES import Activity
+from .ActivityBase import Activity
 from typing import Dict, NewType
 from dataclasses import dataclass
 

@@ -4,6 +4,7 @@ import math
 import random
 
 from HealthDES import PersonBase
+from HealthDES.SimulationBase import SimEnv
 from typing import Optional
 # from DiseaseProgression import DiseaseProgression
 
@@ -18,29 +19,20 @@ class Person(PersonBase):
     """
 
     def __init__(self,
-                 simulation_params,
+                 sim_env: SimEnv,
                  starting_node_id: str,
                  infection_status_label: Optional[str] = None,
                  quanta_emission_rate: Optional[float] = None,
                  inhalation_rate: Optional[float] = None,
                  person_type: Optional[str] = None):
-        """Establish the persons characteristics, this will be specific to each model
 
-        Args:
-            simulation_params (dict): Dictionary of simulation parameters.
-            starting_node_id (string): id for the starting node within the network graph.
-            infection_status_label (disease_status, optional): Disease status of the person. Defaults to None.
-            quanta_emission_rate (number, optional): Quanta emitted by the person per hour. Defaults to None.
-            inhalation_rate (number, optional): Respiratory rate of the person per hour. Defaults to None.
-            person_type (string, optional): Type of the person (visitor, staff, etc.). Defaults to None.
-        """
         # Initialise the base class
-        super().__init__(simulation_params, starting_node_id)
+        super().__init__(sim_env, starting_node_id)
 
         # Characteristics
         self.state.add_status_attribute(key='infection_status',
-                                         allowable_states=frozenset(['susceptible', 'exposed', 'infected', 'recovered']),
-                                         default_state='susceptible')
+                                        allowable_states=frozenset(['susceptible', 'exposed', 'infected', 'recovered']),
+                                        default_state='susceptible')
 
         self.attr['quanta_emission_rate'] = quanta_emission_rate if quanta_emission_rate else 147
         self.attr['inhalation_rate'] = inhalation_rate if inhalation_rate else 0.54
@@ -66,13 +58,13 @@ class Person(PersonBase):
         if random.random() < self.infection_risk_instant(quanta_concentration):
             if self.state['infection_status'] == 'susceptible':
                 self.log_infection()
-                self.dc.counter_increment('Infections')
+                self.sim_env.dc.counter_increment('Infections')
 
             self.state['infection_status'] = 'exposed'
 
     def infection_risk(self):
         """Determine risk that a patient is infected"""
-        return 1 - math.exp(-1 * self.attr['inhalation_rate'] * self.time_interval * self.attr['cumulative_exposure'])
+        return 1 - math.exp(-1 * self.attr['inhalation_rate'] * self.sim_env.time_interval * self.attr['cumulative_exposure'])
 
     def infection_risk_instant(self, quanta_concentration):
         """Return the probability the person will become infections
@@ -83,15 +75,15 @@ class Person(PersonBase):
         Returns:
             number: Probability that the person will become infected.
         """
-        return 1 - math.exp(-1 * self.attr['inhalation_rate'] * self.time_interval * quanta_concentration)
+        return 1 - math.exp(-1 * self.attr['inhalation_rate'] * self.sim_env.time_interval * quanta_concentration)
 
     def log_infection_risk(self):
         """Log visitors infection risk"""
-        self.dc.log_reporting('Infection risk',
-                              {'Person': self.id,
-                               'Infection risk': self.infection_risk()})
+        self.sim_env.dc.log_reporting('Infection risk',
+                                      {'Person': self.id,
+                                       'Infection risk': self.infection_risk()})
 
     def log_infection(self):
         """Log visitor activity within the process visitor process"""
-        self.dc.log_reporting('Infections',
-                              {'Person': self.id})
+        self.sim_env.dc.log_reporting('Infections',
+                                      {'Person': self.id})

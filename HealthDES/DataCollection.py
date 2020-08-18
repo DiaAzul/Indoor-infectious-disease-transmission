@@ -4,10 +4,9 @@ import pandas as pd  # modin
 
 from io import StringIO
 from csv import DictWriter
-
-# Import local libraries
-# pylint: disable=relative-beyond-top-level
-from .Check import CheckList
+import simpy
+import simpy.events
+from typing import Callable, Generator, Any, Dict, Union, Optional, cast, List, TypeVar
 
 
 class DataCollection:
@@ -21,10 +20,9 @@ class DataCollection:
     """
     # TODO: Implement some form of memory management to flush in-memory csv to disk/database if
     #       memory tight
-    # TODO: Apache Arrow: Consider using, however, doesn't always support windows.
-
-    # TODO: Update parameters at init to use param dictionary.
-    def __init__(self, env, simulation_name=None, simulation_run=None):
+    def __init__(self, env: simpy.Environment,
+                 simulation_name: str,
+                 simulation_run: str):
         """ Create a class to collect data within a simulation run
 
         Keyword parameters:
@@ -38,9 +36,9 @@ class DataCollection:
         self.simulation_run = simulation_run
 
         # All the memory tables referenced from dictionary
-        self.memory_file = {}
-        self.memory_writer = {}
-        self.counters = {}
+        self.memory_file: Dict[str, StringIO] = {}
+        self.memory_writer: Dict[str, DictWriter] = {}
+        self.counters: Dict[str, Union[int, float]] = {}
 
     """ Template for periodic reporting
 
@@ -65,7 +63,10 @@ class DataCollection:
         self.dc.create_period_reporting(data_set_name, callback, periods)
     """
 
-    def create_period_reporting(self, data_set_name, callback, periods):
+    def create_period_reporting(self,
+                                data_set_name: str,
+                                callback: Callable[[], Dict[str, Union[int, float, str]]],
+                                periods: int) -> None:
         """ Register a periodic report
 
         Keyword parameters:
@@ -75,10 +76,10 @@ class DataCollection:
 
         Note data collection is triggered when the model first starts
         """
-        CheckList.fail_if_this_key_in_the_dictionary(data_set_name, self.memory_file)
+        if data_set_name in self.memory_file:
+            raise KeyError(f'Cannot have duplicate report names "{data_set_name}" in dictionary')
 
         column_dictionary = callback()
-        CheckList.is_a_dictionary(column_dictionary)
 
         header_list = []
         for key, _ in column_dictionary.items():
@@ -99,7 +100,10 @@ class DataCollection:
 
         self.env.process(self.periodic_reporting(data_set_name, callback, periods))
 
-    def periodic_reporting(self, data_set_name, callback, periods):
+    def periodic_reporting(self,
+                           data_set_name: str,
+                           callback: Callable,
+                           periods: int) -> Generator[simpy.events.Event, Any, Any]:
         """ Add a new periodic reporting process
 
         Keyword parameters:
@@ -116,15 +120,15 @@ class DataCollection:
 
             yield self.env.timeout(periods)
 
-    def log_reporting(self, data_set_name, column_dictionary):
+    def log_reporting(self,
+                      data_set_name: str,
+                      column_dictionary: Dict[str, Union[int, float, str]]) -> None:
         """ Log data submitted by the simulation
 
         Keyword parameters:
         data_set_name           The name of the dataset into which data stored
         column_dictionary       The method to call to fetch the data
          """
-
-        CheckList.is_a_dictionary(column_dictionary)
 
         # If the report doesn't already exist, create a new report
         if not (data_set_name in self.memory_file):
@@ -151,7 +155,9 @@ class DataCollection:
         column_dictionary['simulation_name'] = self.simulation_name
         self.memory_writer[data_set_name].writerow(column_dictionary)
 
-    def counter_increment(self, data_set_name, amount=None):
+    def counter_increment(self,
+                          data_set_name: str,
+                          amount: Optional[Union[int, float]] = None) -> None:
         """Increment counter
 
         Keyword parameters:
@@ -165,7 +171,9 @@ class DataCollection:
 
         self.counters[data_set_name] += amount
 
-    def counter_decrement(self, data_set_name, amount=None):
+    def counter_decrement(self,
+                          data_set_name: str,
+                          amount: Optional[Union[int, float]] = None) -> None:
         """Decrement counter
 
         Keyword parameters:
@@ -179,28 +187,33 @@ class DataCollection:
 
         self.counters[data_set_name] -= amount
 
-    def get_results(self, data_set_name):
+    def get_results(self,
+                    data_set_name: str) -> Optional[pd.DataFrame]:
         """ Return stored data as a pandas data frame """
         file = self.memory_file.get(data_set_name, None)
         df = None
         if file is not None:
             file.seek(0)
-            df = pd.read_csv(file)
+            df = cast(pd.DataFrame, pd.read_csv(file))
 
         return df
 
-    def get_counter(self, data_set_name):
+    def get_counter(self,
+                    data_set_name: str) -> Optional[Union[int, float]]:
         """return value of a counter"""
 
         return self.counters.get(data_set_name, None)
 
-    def get_list_of_reports(self):
+    def get_list_of_reports(self) -> List[str]:
         """ Get a list of reports
 
         Return: list of reports
         """
-        report_list = []
+        report_list: List[str] = []
         for key, _ in self.memory_file.items():
             report_list.append(key)
 
         return report_list
+
+
+DataCollectionType = TypeVar('DataCollectionType', bound=DataCollection)

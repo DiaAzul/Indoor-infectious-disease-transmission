@@ -8,13 +8,10 @@ from .PersonBase import PersonBase, PersonType
 from .ResourceBase import ResourceBase
 from .Routing import Routing
 from .SimulationBase import SimulationBase
-from .Check import CheckList, Check
 
 __all__ = ['ActivityBase',
            'ActivityType',
            'Activity',
-           'Check',
-           'CheckList',
            'DataCollection',
            'DecisionBase',
            'DecisionType',
