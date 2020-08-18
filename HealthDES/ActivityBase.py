@@ -7,11 +7,16 @@ import sys
 from simpy import Store
 from typing import Callable, Union, Dict, Generator, Tuple, Optional, cast, Type
 from dataclasses import dataclass
-from .AttrActions import AttrActionsType
-from .SimulationEnvironment import SimEnv
+from .AttrActions import AttrActions
+
+# We are not importing SimEnv, we are only using them for type checking.
+# Note: import annotations from future for Python < 3.8
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .SimulationEnvironment import SimEnv
 
 
-kwargTypes = Union[bool, bytes, str, int, float, complex, frozenset, Store, Callable, AttrActionsType]
+kwargTypes = Union[bool, bytes, str, int, float, complex, frozenset, Store, Callable, AttrActions]
 
 
 class ActivityBase():
@@ -58,7 +63,7 @@ class ActivityBase():
 
         self.sim_env = sim_env
 
-        self.person: AttrActionsType = cast(AttrActionsType, kwargs.get('person'))
+        self.person: AttrActions = cast(AttrActions, kwargs.get('person'))
         self.message_to_activity: Store = cast(Store, kwargs.get('message_to_activity'))
         self.message_to_person: Store = cast(Store, kwargs.get('message_to_person'))
 

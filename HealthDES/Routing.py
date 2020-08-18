@@ -1,10 +1,14 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
+from __future__ import annotations
 import networkx as nx
+from typing import List, Dict, Optional, Tuple, Type, TYPE_CHECKING
 
-from typing import List, Dict, Optional, Tuple, Type
-from .ActivityBase import ActivityBase, Activity
-from .DecisionBase import DecisionBase, Decision
+# We are not import Activity and Decision, we are only using them for type checking.
+# Note: import annotations from future for Python < 3.8
+if TYPE_CHECKING:
+    from .ActivityBase import ActivityBase, Activity
+    from .DecisionBase import DecisionBase, Decision
 
 
 class Routing():

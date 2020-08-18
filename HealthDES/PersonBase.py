@@ -5,12 +5,16 @@ import simpy.events
 import itertools
 import yaml
 import sys
-
 from dataclasses import dataclass
 from .AttrActions import AttrActions
-from .ActivityBase import Activity
 from typing import Generator, Optional, NewType, Any
-from .SimulationEnvironment import SimEnv
+
+# We are not importing SimEnv and ACtivity, we are only using them for type checking.
+# Note: import annotations from future for Python < 3.8
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .SimulationEnvironment import SimEnv
+    from .ActivityBase import Activity
 
 
 @dataclass

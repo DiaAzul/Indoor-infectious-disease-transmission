@@ -11,7 +11,7 @@
 <polygon fill="white" stroke="none" points="-4,4 -4,-841.985 547.153,-841.985 547.153,4 -4,4"/>
 <!-- HealthDES -->
 <g id="node1" class="node"><title>HealthDES</title><style>.edge>path:hover{stroke-width:8}</style>
-<ellipse fill="#913030" stroke="black" cx="283.392" cy="-18" rx="38.0276" ry="18"/>
+<ellipse fill="#883a3a" stroke="black" cx="283.392" cy="-18" rx="38.0276" ry="18"/>
 <text text-anchor="middle" x="283.392" y="-15.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">HealthDES</text>
 </g>
 <!-- HealthDES_ActivityBase -->
@@ -107,7 +107,7 @@
 </g>
 <!-- HealthDES_SimulationBase -->
 <g id="node10" class="node"><title>HealthDES_SimulationBase</title><style>.edge>path:hover{stroke-width:8}</style>
-<ellipse fill="#993333" stroke="black" cx="283.392" cy="-93.2132" rx="60.2083" ry="21.4286"/>
+<ellipse fill="#a13535" stroke="black" cx="283.392" cy="-93.2132" rx="60.2083" ry="21.4286"/>
 <text text-anchor="middle" x="283.392" y="-96.2132" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">HealthDES.</text>
 <text text-anchor="middle" x="283.392" y="-85.2132" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">SimulationBase</text>
 </g>
@@ -168,7 +168,7 @@
 <!-- HealthDES_SimulationBase&#45;&gt;HealthDES -->
 <g id="edge19" class="edge"><title>HealthDES_SimulationBase&#45;&gt;HealthDES</title><style>.edge>path:hover{stroke-width:8}</style>
 <path fill="none" stroke="black" d="M283.392,-71.8192C283.392,-63.9653 283.392,-54.8636 283.392,-46.4512"/>
-<polygon fill="#993333" stroke="black" points="286.892,-46.3099 283.392,-36.3099 279.892,-46.31 286.892,-46.3099"/>
+<polygon fill="#a13535" stroke="black" points="286.892,-46.3099 283.392,-36.3099 279.892,-46.31 286.892,-46.3099"/>
 </g>
 <!-- HealthDES_SimulationEnvironment&#45;&gt;HealthDES_ActivityBase -->
 <g id="edge20" class="edge"><title>HealthDES_SimulationEnvironment&#45;&gt;HealthDES_ActivityBase</title><style>.edge>path:hover{stroke-width:8}</style>

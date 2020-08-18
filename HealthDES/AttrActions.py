@@ -1,7 +1,7 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 import itertools
-from typing import NewType, Dict, Any, Callable
+from typing import Dict, Any, Callable
 from .AttrDict import AttrDict
 from .StateDict import StateDict
 
@@ -79,6 +79,3 @@ class AttrActions:
             del self._do[action]
         except KeyError:
             raise KeyError(f'{action} isn''t a defined action.')
-
-
-AttrActionsType = NewType('AttrActionsType', AttrActions)

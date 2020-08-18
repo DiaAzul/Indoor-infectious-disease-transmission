@@ -1,10 +1,13 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 from __future__ import annotations
-import simpy
 from dataclasses import dataclass
+
+# We are not importing Simpy, DataCollection, and Routing, we are only using them for type checking.
+# Note: import annotations from future for Python < 3.8
 from typing import TYPE_CHECKING
-if TYPE_CHECKING:  # Type checking creates a circular import (needs annotations as well)
+if TYPE_CHECKING:
+    import simpy
     from .DataCollection import DataCollection
     from .Routing import Routing
 

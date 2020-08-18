@@ -2,11 +2,11 @@
 
 import simpy
 import pandas as pd
+from typing import List, Any, Optional, Union
 
 # Import local libraries
-from HealthDES import DataCollection
-from HealthDES import Routing
-from typing import List, Any, Optional, Union
+from .DataCollection import DataCollection
+from .Routing import Routing
 from .SimulationEnvironment import SimEnv
 
 
@@ -46,17 +46,13 @@ class SimulationBase:
                               env=env,
                               dc=dc,
                               routing=Routing(),
-                              time_interval=time_interval)  # TODO: TIME_INTERVAL BLOCKER
+                              time_interval=time_interval)
 
         # call specific initialisations
         self.initialise(**kwargs)
 
     def initialise(self) -> None:
         pass
-
-    # TODO: Do we need to get rid of this?
-    # def add_simulation_param(self, param_name: str, param: Any) -> None:
-    #     self.simulation_params[param_name] = param
 
     def get_list_of_reports(self) -> List[str]:
         """Get the list of reports.
