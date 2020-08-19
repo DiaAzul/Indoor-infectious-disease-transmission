@@ -23,7 +23,7 @@ class VisitorActivity(ActivityBase):
         self.duration: int = cast(int, kwargs['duration'])
 
     @classmethod
-    def pack_parameters(cls, microenvironment, duration) -> Tuple[Type[VisitorActivity], Dict[str, kwargTypes]]:
+    def pack_parameters(cls, microenvironment, duration) -> Tuple[Type[ActivityBase], Dict[str, kwargTypes]]:
         """Pack parameters for the activity into a dictionary.
 
         Arguments:

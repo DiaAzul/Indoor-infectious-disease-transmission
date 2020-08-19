@@ -1,11 +1,12 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
-import pandas as pd  # modin
+import pandas as pd
+import simpy
+import simpy.events
 
 from io import StringIO
 from csv import DictWriter
-import simpy
-import simpy.events
+
 from typing import Callable, Generator, Any, Dict, Union, Optional, cast, List, TypeVar
 
 

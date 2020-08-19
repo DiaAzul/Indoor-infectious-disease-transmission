@@ -1,8 +1,10 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 from __future__ import annotations
-from typing import Union, Iterable, Optional, List, Type, FrozenSet, Dict, NewType
 from collections.abc import MutableMapping
+
+from typing import Union, Iterable, Optional, List, Type, FrozenSet, Dict, NewType
+
 
 AttrDict_KT = str
 # Need to consider how to do dynamic typing in a dictionary where keys are not know upfront

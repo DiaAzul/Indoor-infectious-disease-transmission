@@ -1,10 +1,10 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
-import simpy
 import pandas as pd
+import simpy
+
 from typing import List, Any, Optional, Union
 
-# Import local libraries
 from .DataCollection import DataCollection
 from .Routing import Routing
 from .SimulationEnvironment import SimEnv

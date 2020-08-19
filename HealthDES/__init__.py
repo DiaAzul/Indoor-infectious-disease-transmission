@@ -1,23 +1,20 @@
 # Import public APIs for HealthDES
 # flake8: noqa
 
-from .ActivityBase import ActivityBase, Activity, ActivityType
+from .ActivityBase import ActivityBase
 from .DataCollection import DataCollection
-from .DecisionBase import DecisionBase, Decision, DecisionType
-from .PersonBase import PersonBase, PersonType
+from .DecisionBase import DecisionBase
+from .PersonBase import PersonBase
 from .ResourceBase import ResourceBase
-from .Routing import Routing
+from .Routing import Routing, Activity, Decision
 from .SimulationBase import SimulationBase
 
 __all__ = ['ActivityBase',
-           'ActivityType',
            'Activity',
            'DataCollection',
            'DecisionBase',
-           'DecisionType',
            'Decision',
            'PersonBase',
-           'PersonType'
            'ResourceBase',
            'Routing',
            'SimulationBase']

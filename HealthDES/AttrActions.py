@@ -1,7 +1,9 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 import itertools
+
 from typing import Dict, Any, Callable
+
 from .AttrDict import AttrDict
 from .StateDict import StateDict
 

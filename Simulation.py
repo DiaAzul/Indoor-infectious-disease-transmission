@@ -1,14 +1,18 @@
 """ Python library to model the spread of infectious diseases within a microenvironment """
 
+
 import simpy
 import simpy.core
 import time
+import sys
+import traceback
 
 # Import local libraries
 from HealthDES import SimulationBase
 
 from Microenvironment import Microenvironment
 from Activity import VisitorActivity
+from HealthDES.Routing import Activity
 from Person import Person
 # from DiseaseProgression import DiseaseProgression
 
@@ -74,12 +78,17 @@ class Simulation(SimulationBase):
                                                 .get('average-length-of-stay')
         duration = duration / self.sim_env.time_interval  # Convert hours to time measures
 
+        # TODO: NEED TO GET AN ACTIVITY OBJECT BACK NOT COMPONENTS!!!!!
         activity_name = 'visit environment'
         activity_class, arguments = VisitorActivity.pack_parameters(
             self.microenvironments[microenvironment_name],
             duration)
+        activity = Activity(id=activity_name,
+                            graph_ref=None,
+                            activity_class=activity_class,
+                            kwargs=arguments)
 
-        self.sim_env.routing.register_activity(activity_name, activity_class, **arguments)
+        self.sim_env.routing.register_activity(activity)
 
     def create_network_routing(self):
         """Create a simple network routing.
@@ -173,7 +182,14 @@ class Simulation(SimulationBase):
         if report_time:
             print(f"Running the model for {self.periods} periods")
 
-        self.sim_env.env.run(until=self.periods)
+        try:
+            self.sim_env.env.run(until=self.periods)
+        except Exception as ex:
+            _, _, ex_traceback = sys.exc_info()
+            tb_lines = traceback.format_exception(ex.__class__, ex, ex_traceback)
+            tb_text = ''.join(tb_lines)
+            print(tb_text)
+            raise Exception(ex)
 
         if report_time:
             t_end = time.time()

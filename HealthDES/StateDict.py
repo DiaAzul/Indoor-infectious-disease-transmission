@@ -1,9 +1,12 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 from __future__ import annotations
-from typing import Union, Iterable, Optional, FrozenSet, Dict
+
 from collections.abc import MutableMapping
 from dataclasses import dataclass
+
+from typing import Union, Iterable, Optional, FrozenSet, Dict
+
 
 AttrDict_KT = str
 AttrDict_VT = Union[Optional[bool],

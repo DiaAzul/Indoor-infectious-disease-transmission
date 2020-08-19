@@ -1,14 +1,34 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 from __future__ import annotations
-import networkx as nx
-from typing import List, Dict, Optional, Tuple, Type, TYPE_CHECKING
 
+import networkx as nx
+
+from dataclasses import dataclass
+
+from typing import List, Dict, Optional, Tuple, Type, TYPE_CHECKING
 # We are not import Activity and Decision, we are only using them for type checking.
 # Note: import annotations from future for Python < 3.8
 if TYPE_CHECKING:
-    from .ActivityBase import ActivityBase, Activity
-    from .DecisionBase import DecisionBase, Decision
+    from .ActivityBase import ActivityBase
+    from .DecisionBase import DecisionBase
+
+
+@dataclass
+class Activity:
+    __slots__ = ['id', 'graph_ref', 'activity_class', 'kwargs']
+    id: str
+    graph_ref: Optional[Tuple[str, str, int]]
+    activity_class: Optional[Type[ActivityBase]]
+    kwargs: Optional[Dict]
+
+
+@dataclass
+class Decision:
+    __slots__ = ['id', 'decision_class', 'kwargs']
+    id: str
+    decision_class: DecisionBase
+    kwargs: Dict
 
 
 class Routing():
@@ -41,15 +61,11 @@ class Routing():
         self._decisions: Dict[str, Decision] = {}
 
     # Methods to interact with the activity dictionary
-    def register_activity(self,
-                          activity_id: str,
-                          activity_class: Type[ActivityBase],
-                          **activity_kwargs: Dict) -> None:
-
-        if self._activities.get(activity_id) is None:
-            self._activities[activity_id] = Activity(activity_id, None, activity_class, activity_kwargs)
+    def register_activity(self, activity: Activity) -> None:
+        if self._activities.get(activity.id) is None:
+            self._activities[activity.id] = activity
         else:
-            raise ValueError(f'{activity_id} is not a unique activity ID.')
+            raise ValueError(f'{activity.id} is not a unique activity ID.')
 
     def get_registered_activities(self) -> Optional[Dict[str, Activity]]:
         return self._activities
@@ -58,14 +74,12 @@ class Routing():
         return self._activities.get(activity_id)
 
     # Methods to interact with the activity dictionary
-    def register_decision(self, decision_id: str,
-                          decision_class: DecisionBase,
-                          **decision_kwargs: Dict) -> None:
+    def register_decision(self, decision: Decision) -> None:
 
-        if self._decisions.get(decision_id) is None:
-            self._decisions[decision_id] = Decision(decision_id, decision_class, decision_kwargs)
+        if self._decisions.get(decision.id) is None:
+            self._decisions[decision.id] = decision
         else:
-            raise ValueError(f'{decision_id} is not a unique decision ID.')
+            raise ValueError(f'{decision.id} is not a unique decision ID.')
 
     def get_registered_decisions(self) -> Optional[Dict[str, Decision]]:
         return self._decisions

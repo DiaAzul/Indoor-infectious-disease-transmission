@@ -1,12 +1,13 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
 from __future__ import annotations
-import yaml
 import inspect
 import sys
+import yaml
 from simpy import Store
-from typing import Callable, Union, Dict, Generator, Tuple, Optional, cast, Type
-from dataclasses import dataclass
+
+from typing import Callable, Union, Dict, Generator, Tuple, cast, Type
+
 from .AttrActions import AttrActions
 
 # We are not importing SimEnv, we are only using them for type checking.
@@ -151,12 +152,3 @@ class ActivityBase():
 
     def end(self) -> None:
         pass
-
-
-@dataclass
-class Activity:
-    __slots__ = ['id', 'graph_ref', 'activity_class', 'kwargs']
-    id: str
-    graph_ref: Optional[Tuple[str, str, int]]
-    activity_class: Optional[Type[ActivityBase]]
-    kwargs: Optional[Dict]

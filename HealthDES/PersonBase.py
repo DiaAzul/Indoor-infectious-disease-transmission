@@ -1,20 +1,23 @@
 """ HealthDES - A python library to support discrete event simulation in health and social care """
 
+from __future__ import annotations
+
+import itertools
 import simpy
 import simpy.events
-import itertools
-import yaml
 import sys
-from dataclasses import dataclass
-from .AttrActions import AttrActions
-from typing import Generator, Optional, NewType, Any
+import yaml
 
+from dataclasses import dataclass
+
+from .AttrActions import AttrActions
+from typing import Generator, NewType, Any, Optional
 # We are not importing SimEnv and ACtivity, we are only using them for type checking.
 # Note: import annotations from future for Python < 3.8
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .SimulationEnvironment import SimEnv
-    from .ActivityBase import Activity
+    from .Routing import Activity
 
 
 @dataclass
