@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class SimEnv:
+    """Object to hold global information about this instance of the simulation.
+    """
     __slots__ = ['simulation_name', 'simulation_run', 'time_interval', 'env', 'dc', 'routing']
     simulation_name: str
     simulation_run: str

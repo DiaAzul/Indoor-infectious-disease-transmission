@@ -14,6 +14,7 @@ from Microenvironment import Microenvironment
 from Activity import VisitorActivity
 from HealthDES.Routing import Activity
 from Person import Person
+
 # from DiseaseProgression import DiseaseProgression
 
 from Configuration import Config
@@ -39,9 +40,9 @@ class Simulation(SimulationBase):
         """Initialise the simulation.
         """
 
-        self.microenvironment_name = kwargs['microenvironment']
+        self.microenvironment_name = kwargs["microenvironment"]
 
-        self.periods = kwargs['periods'] if kwargs['periods'] else 180
+        self.periods = kwargs["periods"] if kwargs["periods"] else 180
         # self.add_simulation_param('simulation_length', self.periods)
 
         # Import configuration information
@@ -56,90 +57,102 @@ class Simulation(SimulationBase):
         """Create the microenvironments used within the simulation."""
 
         if not bool(self.config.microenvironments):
-            raise ValueError('No microenvironments defined')
+            raise ValueError("No microenvironments defined")
 
         for name, microenv in self.config.microenvironments.items():
             # name = microenv.get('environment')
-            volume = microenv.get('volume')  # m^3
-            air_exchange_rate = microenv.get('air-exchange-rate')
-            capacity = microenv.get('visitor-capacity')
+            volume = microenv.get("volume")  # m^3
+            air_exchange_rate = microenv.get("air-exchange-rate")
+            capacity = microenv.get("visitor-capacity")
             capacity = None if capacity == 0 else capacity
 
-            self.microenvironments[name] = Microenvironment(self.sim_env,
-                                                            name,
-                                                            volume,
-                                                            air_exchange_rate,
-                                                            capacity=capacity)
+            self.microenvironments[name] = Microenvironment(
+                self._sim_env, name, volume, air_exchange_rate, capacity=capacity
+            )
 
     def create_activities(self, microenvironment_name):
         """Create a dictionary of activities."""
 
-        duration = self.config.microenvironments.get(microenvironment_name) \
-                                                .get('average-length-of-stay')
-        duration = duration / self.sim_env.time_interval  # Convert hours to time measures
+        duration = self.config.microenvironments.get(microenvironment_name).get(
+            "average-length-of-stay"
+        )
+        duration = (
+            duration / self._sim_env.time_interval
+        )  # Convert hours to time measures
 
         # TODO: NEED TO GET AN ACTIVITY OBJECT BACK NOT COMPONENTS!!!!!
-        activity_name = 'visit environment'
+        activity_name = "visit environment"
         activity_class, arguments = VisitorActivity.pack_parameters(
-            self.microenvironments[microenvironment_name],
-            duration)
-        activity = Activity(id=activity_name,
-                            graph_ref=None,
-                            activity_class=activity_class,
-                            kwargs=arguments)
+            self.microenvironments[microenvironment_name], duration
+        )
+        activity = Activity(
+            id=activity_name,
+            graph_ref=None,
+            activity_class=activity_class,
+            kwargs=arguments,
+        )
 
-        self.sim_env.routing.register_activity(activity)
+        self._sim_env.routing.register_activity(activity)
 
     def create_network_routing(self):
         """Create a simple network routing.
 
         From 'start' to 'end' via 'visit environment
         """
-        routing_entry_point = self.sim_env.routing.add_decision('start')
-        self.sim_env.routing.add_decision('end')
+        routing_entry_point = self._sim_env.routing.add_decision("start")
+        self._sim_env.routing.add_decision("end")
 
-        self.sim_env.routing.add_activity('visit environment', 'start', 'end')
+        self._sim_env.routing.add_activity("visit environment", "start", "end")
 
         return routing_entry_point
 
-    def create_people(self,
-                      arrivals_per_hour,
-                      max_arrivals=None,
-                      quanta_emission_rate=None,
-                      inhalation_rate=None):
+    def create_people(
+        self,
+        arrivals_per_hour,
+        max_arrivals=None,
+        quanta_emission_rate=None,
+        inhalation_rate=None,
+    ):
         """ Create a method of generating people """
 
         is_someone_infected = False
         generated_people = 0
 
         while True:
-            infection_status_label = 'susceptible' if is_someone_infected else 'infected'
+            infection_status_label = (
+                "susceptible" if is_someone_infected else "infected"
+            )
 
             is_someone_infected = True
 
             generated_people += 1
-            person = Person(self.sim_env,
-                            starting_node_id='start',
-                            person_type='visitor',
-                            infection_status_label=infection_status_label,
-                            quanta_emission_rate=quanta_emission_rate,
-                            inhalation_rate=inhalation_rate)
+            person = Person(
+                self._sim_env,
+                starting_node_id="start",
+                person_type="visitor",
+                infection_status_label=infection_status_label,
+                quanta_emission_rate=quanta_emission_rate,
+                inhalation_rate=inhalation_rate,
+            )
 
             # self.create_routing(person, duration=duration)
-            self.sim_env.env.process(person.run())
+            self._sim_env.env.process(person.run())
 
-            time_to_next_person = arrivals_per_hour * self.sim_env.time_interval
-            yield self.sim_env.env.timeout(time_to_next_person)
+            time_to_next_person = arrivals_per_hour * self._sim_env.time_interval
+            yield self._sim_env.env.timeout(time_to_next_person)
 
             # If we have generated enough people then stop
-            if max_arrivals and (generated_people >= max_arrivals): break  # noqa:E701
+            if max_arrivals and (generated_people >= max_arrivals):
+                break  # noqa:E701
 
-    def run(self,
-            arrivals_per_hour=None,
-            quanta_emission_rate=None,
-            inhalation_rate=None,
-            max_arrivals=None,
-            report_time=None):
+    def run(
+        self,
+        arrivals_per_hour=None,
+        quanta_emission_rate=None,
+        inhalation_rate=None,
+        max_arrivals=None,
+        report_time=None,
+    ):
         """ Run the simulation
 
         Keyword arguments:
@@ -153,13 +166,19 @@ class Simulation(SimulationBase):
         # Comment out running all
         # for key in self.microenvironments:
         #    self.env.process(self.microenvironments[key].run())
-        self.sim_env.env.process(self.microenvironments.get(self.microenvironment_name).run())
+        self._sim_env.env.process(
+            self.microenvironments.get(self.microenvironment_name).run()
+        )
 
         if arrivals_per_hour is None:
-            arrivals_per_hour = self.config.microenvironments.get(self.microenvironment_name).get('visitor-arrival-rate')
+            arrivals_per_hour = self.config.microenvironments.get(
+                self.microenvironment_name
+            ).get("visitor-arrival-rate")
 
         if not max_arrivals:
-            temp = self.config.microenvironments.get(self.microenvironment_name).get('max-arrivals', 0)
+            temp = self.config.microenvironments.get(self.microenvironment_name).get(
+                "max-arrivals", 0
+            )
             if temp > 0:
                 max_arrivals = temp
             else:
@@ -172,10 +191,14 @@ class Simulation(SimulationBase):
         self.create_network_routing()
 
         # Start people generation process
-        self.sim_env.env.process(self.create_people(arrivals_per_hour,
-                                                    max_arrivals=max_arrivals,
-                                                    quanta_emission_rate=quanta_emission_rate,
-                                                    inhalation_rate=inhalation_rate))
+        self._sim_env.env.process(
+            self.create_people(
+                arrivals_per_hour,
+                max_arrivals=max_arrivals,
+                quanta_emission_rate=quanta_emission_rate,
+                inhalation_rate=inhalation_rate,
+            )
+        )
 
         # Run the model
         t_start = time.time()
@@ -183,11 +206,11 @@ class Simulation(SimulationBase):
             print(f"Running the model for {self.periods} periods")
 
         try:
-            self.sim_env.env.run(until=self.periods)
+            self._sim_env.env.run(until=self.periods)
         except Exception as ex:
             _, _, ex_traceback = sys.exc_info()
             tb_lines = traceback.format_exception(ex.__class__, ex, ex_traceback)
-            tb_text = ''.join(tb_lines)
+            tb_text = "".join(tb_lines)
             print(tb_text)
             raise Exception(ex)
 

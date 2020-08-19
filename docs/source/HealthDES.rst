@@ -18,4 +18,3 @@ The HealthDES package provides a framework for creating discrete event simulatio
    AttrActions
    AttrDict
    StateDict
-   Check
