@@ -33,7 +33,7 @@ class Person(PersonBase):
         super().__init__(sim_env, starting_node_id)
 
         # Characteristics
-        self.state.add_status_attribute(
+        self.state.add_state_attribute(
             key="infection_status",
             allowable_states=frozenset(
                 ["susceptible", "exposed", "infected", "recovered"]
