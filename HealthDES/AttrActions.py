@@ -11,25 +11,41 @@ from collections.abc import MutableMapping
 from dataclasses import dataclass
 import itertools
 
-from typing import Any, Callable, Dict, FrozenSet, Iterable, NewType, Optional, Set, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    FrozenSet,
+    Iterable,
+    NewType,
+    Optional,
+    Set,
+    Type,
+    Union,
+)
 
 
 # Define valid key and value types for dictionaries (immutable values only)
 AttrDict_KT = str
-AttrDict_VT = NewType('AttrDict_VT', Union[bool,
-                                           bytes,
-                                           str,
-                                           int,
-                                           float,
-                                           complex,
-                                           FrozenSet,
-                                           Optional[bool],
-                                           Optional[bytes],
-                                           Optional[str],
-                                           Optional[int],
-                                           Optional[float],
-                                           Optional[complex],
-                                           Optional[FrozenSet]])
+AttrDict_VT = NewType(
+    "AttrDict_VT",
+    Union[
+        bool,
+        bytes,
+        str,
+        int,
+        float,
+        complex,
+        FrozenSet,
+        Optional[bool],
+        Optional[bytes],
+        Optional[str],
+        Optional[int],
+        Optional[float],
+        Optional[complex],
+        Optional[FrozenSet],
+    ],
+)
 
 
 class AttrDict(MutableMapping):
@@ -54,7 +70,7 @@ class AttrDict(MutableMapping):
         if type(value) in AttrDict.valid_types or value is None:
             self._att_register[key] = value
         else:
-            raise ValueError(f'Update {key} must be immutable value.')
+            raise ValueError(f"Update {key} must be immutable value.")
 
     def __iter__(self) -> Iterable[AttrDict_KT]:
         return iter(self._att_register)
@@ -69,11 +85,13 @@ class AttrDict(MutableMapping):
 @dataclass
 class StateObject:
     """The StateObject is a classification object with multiple allowable states.
-    + *current_state* is the current state of the object.
-    + *allowable_states* are the states the object is allowed to have.
-    + *default_state* the initial state of the object. Object can be reset to this state.
+
+    - *current_state* is the current state of the object.
+    - *allowable_states* are the states the object is allowed to have.
+    - *default_state* the initial state of the object. Object can be reset to this state.
     """
-    __slots__ = ['current_state', 'allowable_states', 'default_state']
+
+    __slots__ = ["current_state", "allowable_states", "default_state"]
     current_state: AttrDict_VT
     allowable_states: FrozenSet[AttrDict_VT]
     default_state: AttrDict_VT
@@ -85,6 +103,7 @@ class StateDict(MutableMapping):
     condition (healthy, unhealthy), injury severity (minor, major, critical), or infection
     state (susceptible, exposed, infected, recovered).
     """
+
     def __init__(self) -> None:
         self._status_register: Dict[AttrDict_KT, StateObject] = {}
 
@@ -92,21 +111,23 @@ class StateDict(MutableMapping):
         try:
             return self._status_register[key].current_state
         except KeyError:
-            raise KeyError('{key} does not exist in status register.')
+            raise KeyError("{key} does not exist in status register.")
 
     def __delitem__(self, key: AttrDict_KT) -> None:
         try:
             del self._status_register[key]
         except KeyError:
-            raise KeyError('{key} does not exist in status register.')
+            raise KeyError("{key} does not exist in status register.")
 
     def __setitem__(self, key: AttrDict_KT, value: AttrDict_VT) -> None:
         try:
             if value not in self._status_register[key].allowable_states:
-                raise ValueError(f'{value} is not an allowable state in {key} status register.')
+                raise ValueError(
+                    f"{value} is not an allowable state in {key} status register."
+                )
             self._status_register[key].current_state = value
         except KeyError:
-            raise KeyError('{key} does not exist in status register.')
+            raise KeyError("{key} does not exist in status register.")
 
     def __iter__(self) -> Iterable[AttrDict_KT]:
         return iter(self._status_register)
@@ -117,9 +138,12 @@ class StateDict(MutableMapping):
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._status_register})"
 
-    def add_state_attribute(self, key: AttrDict_KT,
-                            allowable_states: FrozenSet[AttrDict_VT],
-                            default_state: AttrDict_VT):
+    def add_state_attribute(
+        self,
+        key: AttrDict_KT,
+        allowable_states: FrozenSet[AttrDict_VT],
+        default_state: AttrDict_VT,
+    ):
         """Add a state attribute to the dictionary.
 
         Args:
@@ -136,12 +160,16 @@ class StateDict(MutableMapping):
                         allowable_states.
         """
         if key in self._status_register.keys():
-            raise KeyError('{key} already exists in state register.')
+            raise KeyError("{key} already exists in state register.")
         if default_state not in allowable_states:
-            raise ValueError('{default_state} is not an allowable state in {key} status register.')
-        self._status_register[key] = StateObject(current_state=default_state,
-                                                 allowable_states=allowable_states,
-                                                 default_state=default_state)
+            raise ValueError(
+                "{default_state} is not an allowable state in {key} status register."
+            )
+        self._status_register[key] = StateObject(
+            current_state=default_state,
+            allowable_states=allowable_states,
+            default_state=default_state,
+        )
 
     def reset(self, key: AttrDict_KT):
         """Resets the state attribute to the default value.
@@ -153,21 +181,25 @@ class StateDict(MutableMapping):
             KeyError: Raises a key error if the state attribute is not in the dictionary.
         """
         try:
-            self._status_register[key].current_state = self._status_register[key].default_state
+            self._status_register[key].current_state = self._status_register[
+                key
+            ].default_state
         except KeyError:
-            raise KeyError('{key} does not exist in status register.')
+            raise KeyError("{key} does not exist in status register.")
 
 
 class AttrActions:
-    """Inherited by person and resource base classes to provide a standardised interface for recording
+    """Inherited by person and resource base classes to provide a standardised interface for recording \
     attributes and methods. Attributes are held in a separately from the class dictionary so that \
     access can be controlled through a standardised interfaces.
 
     Three types of attributes are available:
-    + *att[name]* - These are regular value attributes, however, they can only store immutable \
+
+    - *att[key]* - These are regular value attributes, however, they can only store immutable \
     objects.
-    + *state[name]* - Attributes that can only hold a defined list of states.
-    + *do[name]* - Method attributes, which allow external access to class functions.
+    - *state[key]* - Attributes that can only hold a defined list of states.
+    - *do[key]* - Method attributes, which allow external access to class functions.
+
 
     This class also generates a unique id within reach of the person and resource classes.
 
@@ -175,6 +207,7 @@ class AttrActions:
         KeyError: If a new action is added with the same name as a previous action.
         KeyError: If an action is not defined at the point it is called.
     """
+
     # create a unique ID counter
     _get_new_id = itertools.count()
 
@@ -199,7 +232,7 @@ class AttrActions:
             KeyError: If the method is already in the dictionary.
         """
         if self._do.get(action) is not None:
-            raise KeyError(f'Action {action} already exists in action register.')
+            raise KeyError(f"Action {action} already exists in action register.")
         self._do[action] = do_action
 
     def do(self, action: str, **kwargs: Any) -> Any:
@@ -219,7 +252,7 @@ class AttrActions:
             action_function = self._do[action]
             return_value = action_function(**kwargs)
         except KeyError:
-            raise KeyError(f'{action} does not exist in action register.')
+            raise KeyError(f"{action} does not exist in action register.")
 
         return return_value
 
@@ -235,4 +268,4 @@ class AttrActions:
         try:
             del self._do[action]
         except KeyError:
-            raise KeyError(f'{action} does not exist in action register.')
+            raise KeyError(f"{action} does not exist in action register.")
