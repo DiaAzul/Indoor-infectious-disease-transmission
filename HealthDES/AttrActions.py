@@ -28,7 +28,8 @@ AttrDict_VT = NewType('AttrDict_VT', Union[bool,
 
 
 class AttrDict(MutableMapping):
-    """Dictionary of immutable attributes."""
+    """Dictionary to hold attributes for model objects. Attributes are constrained to
+    immutable types"""
 
     valid_types: Set[Type] = {bool, bytes, str, int, float, complex, frozenset}
 
@@ -111,26 +112,26 @@ class StateDict(MutableMapping):
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._status_register})"
 
-    def add_status_attribute(self, key: AttrDict_KT,
-                             allowable_states: FrozenSet[AttrDict_VT],
-                             default_state: AttrDict_VT):
-        """Add a status attribute to the dictionary.
+    def add_state_attribute(self, key: AttrDict_KT,
+                            allowable_states: FrozenSet[AttrDict_VT],
+                            default_state: AttrDict_VT):
+        """Add a state attribute to the dictionary.
 
         Args:
             key (AttrDict_KT): Name of the state attribute. Used to reference the attribute.
-            allowable_states (FrozenSet[AttrDict_VT]): A frozenset of allowable states for the \
-        attribute. Note, states must be unique within the set.
-            default_state (AttrDict_VT): The default state for the StateObject when it is \
-        initialise or reset.
+                               allowable_states (FrozenSet[AttrDict_VT]): A frozenset of allowable
+                               states for the attribute. Note, states must be unique within the set.
+            default_state (AttrDict_VT): The default state for the StateObject when it is
+                                         initialise or reset.
 
         Raises:
-            KeyError: Raises a KeyError if the attribute is already defined within the \
+            KeyError: Raises a KeyError if the attribute is already defined within the
         dictionary
-            ValueError: Raises a value error if the value of default_state is not in the \
-        allowable_states.
+            ValueError: Raises a value error if the value of default_state is not in the
+                        allowable_states.
         """
         if key in self._status_register.keys():
-            raise KeyError('{key} already already exists in status register.')
+            raise KeyError('{key} already exists in state register.')
         if default_state not in allowable_states:
             raise ValueError('{default_state} is not an allowable state in {key} status register.')
         self._status_register[key] = StateObject(current_state=default_state,
@@ -193,25 +194,29 @@ class AttrActions:
             KeyError: If the method is already in the dictionary.
         """
         if self._do.get(action) is not None:
-            raise KeyError(f'Action {action} already defined')
+            raise KeyError(f'Action {action} already exists in action register.')
         self._do[action] = do_action
 
-    def do(self, action: str, **kwargs: Any) -> None:
+    def do(self, action: str, **kwargs: Any) -> Any:
         """Calls a method on the person or resource with a list of named arguments.
 
         Args:
             action: Name of the action.
-            kwargs: Dictionary of keyword arguments.
+            kwargs: Keyword arguments to pass to the action
 
         Raises:
-            KeyError: If the method doesn't exist in the dictionary.
-        """
+            KeyError: If the action doesn't exist in the dictionary.
 
+        Returns:
+            The return value from the action.
+        """
         try:
             action_function = self._do[action]
-            action_function(**kwargs)
+            return_value = action_function(**kwargs)
         except KeyError:
-            raise KeyError(f'Received an invalid action: {action}')
+            raise KeyError(f'{action} does not exist in action register.')
+
+        return return_value
 
     def delete_action(self, action: str):
         """Delete an action from the dictionary
@@ -225,4 +230,4 @@ class AttrActions:
         try:
             del self._do[action]
         except KeyError:
-            raise KeyError(f'{action} isn''t a defined action.')
+            raise KeyError(f'{action} does not exist in action register.')
