@@ -1,5 +1,10 @@
-""" HealthDES - A python library to support discrete event simulation in health and social care """
+"""Class to manage model attributes on model elements.
 
+Elements within the model can have attributes. To reduce the risk of side-effects, these attributes
+should unique and immutable. Attributes can be single value immutable types (such as str, int),
+or attributes taking on pre-defined states (e.g. mild, moderate, severe), or do action attributes
+(methods) which can be called with arguments and return value.
+"""
 
 from __future__ import annotations
 from collections.abc import MutableMapping

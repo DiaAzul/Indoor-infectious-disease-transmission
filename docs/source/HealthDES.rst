@@ -16,5 +16,3 @@ The HealthDES package provides a framework for creating discrete event simulatio
    ResourceBase
    DecisionBase
    AttrActions
-   AttrDict
-   StateDict

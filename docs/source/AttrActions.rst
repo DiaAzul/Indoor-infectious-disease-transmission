@@ -1,8 +1,14 @@
-==================================================================
-``AttrActions`` --- HealthDES interface for attributes and actions
-==================================================================
+================================================
+``AttrActions`` --- Attributes on model elements
+================================================
 
 .. automodule:: HealthDES.AttrActions
-   :members:
-   :undoc-members:
-   :show-inheritance:
+
+.. autoclass:: AttrActions
+    :members:
+
+.. autoclass:: AttrDict
+    :members:
+
+.. autoclass:: StateDict
+    :members:
